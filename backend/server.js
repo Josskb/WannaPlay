@@ -107,6 +107,27 @@ app.get('/recommendation/:id_user', async (req, res) => {
   }
 });
 
+// Get game details by ID
+app.get('/game/:id', async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const [rows] = await db.promise().query(
+      'SELECT idgame, name, description, thumbnail FROM Games WHERE idgame = ?',
+      [id]
+    );
+
+    if (rows.length === 0) {
+      return res.status(404).json({ message: 'Game not found.' });
+    }
+
+    res.status(200).json({ game: rows[0] });
+  } catch (error) {
+    console.error('Error fetching game details:', error);
+    res.status(500).json({ message: 'Failed to fetch game details.' });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}`);
 });
