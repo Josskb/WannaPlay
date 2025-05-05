@@ -61,3 +61,16 @@ LEFT JOIN enjoy AS already_liked
 JOIN Games g ON other_likes.id_game = g.idgame
 WHERE already_liked.id_game IS NULL
 GROUP BY target.id_user, g.idgame, g.name, g.description, g.thumbnail;
+
+-- View 5 : Top 5 most liked categories for a user
+CREATE OR REPLACE VIEW v_top5_categories_per_user AS
+SELECT 
+    e.id_user,
+    c.id_category,
+    cat.name AS category_name,
+    COUNT(*) AS like_count
+FROM enjoy e
+JOIN categorise c ON e.id_game = c.id_game
+JOIN Category cat ON c.id_category = cat.id_category
+GROUP BY e.id_user, c.id_category
+ORDER BY e.id_user, like_count DESC;
