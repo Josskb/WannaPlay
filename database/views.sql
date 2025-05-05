@@ -1,5 +1,6 @@
--- views.sql
+-- views.sql (MySQL-compatible)
 
+-- View 1: All games liked by users
 CREATE VIEW UserLikedGames AS
 SELECT 
     U.id_user,
@@ -12,6 +13,7 @@ FROM enjoy E
 JOIN Users U ON E.id_user = U.id_user
 JOIN Games G ON E.id_game = G.idgame;
 
+-- View 2: Recommend games based on liked categories (excluding already liked ones)
 CREATE VIEW RecommendedGamesByCategory AS
 SELECT DISTINCT 
     U.id_user,
@@ -29,6 +31,7 @@ WHERE G2.idgame NOT IN (
 )
 AND G2.idgame <> E.id_game;
 
+-- View 3: Average ratings for each game
 CREATE VIEW TopRatedGames AS
 SELECT 
     G.idgame,
@@ -39,6 +42,7 @@ FROM Rating R
 JOIN Games G ON R.id_game = G.idgame
 GROUP BY G.idgame, G.name;
 
+-- View 4: Collaborative filtering – other users who liked similar games
 CREATE VIEW RecommendedByOtherUsers AS
 SELECT 
     target.id_user AS target_user,

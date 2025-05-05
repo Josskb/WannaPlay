@@ -1,37 +1,41 @@
+-- triggers.sql (MySQL-compatible)
 
--- triggers.sql
+DELIMITER //
 
 -- Trigger 1: Increment like count when a game is liked
 CREATE TRIGGER trg_GameLiked
-ON enjoy
-AFTER INSERT
-AS
+AFTER INSERT ON enjoy
+FOR EACH ROW
 BEGIN
     UPDATE Games
     SET like_count = like_count + 1
-    WHERE idgame IN (SELECT id_game FROM INSERTED);
+    WHERE idgame = NEW.id_game;
 END;
+//
 
 -- Trigger 2: Decrement like count when a like is removed
 CREATE TRIGGER trg_GameUnliked
-ON enjoy
-AFTER DELETE
-AS
+AFTER DELETE ON enjoy
+FOR EACH ROW
 BEGIN
     UPDATE Games
     SET like_count = like_count - 1
-    WHERE idgame IN (SELECT id_game FROM DELETED);
+    WHERE idgame = OLD.id_game;
 END;
+//
 
--- Trigger 3: Automatically assign default category if none exists (hypothetical)
+-- Trigger 3: Automatically assign default category (e.g., Strategy = id 1) if no categorization exists
 CREATE TRIGGER trg_AutoCategoriseGame
-ON Games
-AFTER INSERT
-AS
+AFTER INSERT ON Games
+FOR EACH ROW
 BEGIN
-    INSERT INTO categorise (id_game, id_category)
-    SELECT idgame, 1 FROM INSERTED
-    WHERE NOT EXISTS (
-        SELECT 1 FROM categorise WHERE categorise.id_game = INSERTED.idgame
-    );
+    IF NOT EXISTS (
+        SELECT 1 FROM categorise WHERE id_game = NEW.idgame
+    ) THEN
+        INSERT INTO categorise (id_game, id_category)
+        VALUES (NEW.idgame, 1);
+    END IF;
 END;
+//
+
+DELIMITER ;

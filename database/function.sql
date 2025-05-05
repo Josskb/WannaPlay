@@ -1,54 +1,69 @@
-
--- function.sql
+-- function.sql (MySQL-compatible)
 
 -- Function 1: Count how many games a user liked
-CREATE FUNCTION fn_UserLikesCount (@id_user INT)
+DELIMITER //
+CREATE FUNCTION fn_UserLikesCount (id_user INT)
 RETURNS INT
-AS
+DETERMINISTIC
 BEGIN
-    DECLARE @count INT;
+    DECLARE likes_count INT DEFAULT 0;
 
-    SELECT @count = COUNT(*) FROM enjoy WHERE id_user = @id_user;
+    SELECT COUNT(*) INTO likes_count
+    FROM enjoy
+    WHERE id_user = id_user;
 
-    RETURN @count;
+    RETURN likes_count;
 END;
+//
+DELIMITER ;
 
--- Function 2: Return most liked game ID
+-- Function 2: Return the ID of the most liked game
+DELIMITER //
 CREATE FUNCTION fn_MostLikedGame ()
 RETURNS BIGINT
-AS
+DETERMINISTIC
 BEGIN
-    DECLARE @id BIGINT;
+    DECLARE top_game BIGINT DEFAULT NULL;
 
-    SELECT TOP 1 @id = idgame
+    SELECT idgame INTO top_game
     FROM Games
-    ORDER BY like_count DESC;
+    ORDER BY like_count DESC
+    LIMIT 1;
 
-    RETURN @id;
+    RETURN top_game;
 END;
+//
+DELIMITER ;
 
 -- Function 3: Recommend a random game from user's favorite category
-CREATE FUNCTION fn_RecommendRandomGame (@id_user INT)
+DELIMITER //
+CREATE FUNCTION fn_RecommendRandomGame (id_user INT)
 RETURNS BIGINT
-AS
+DETERMINISTIC
 BEGIN
-    DECLARE @topCategory INT;
-    DECLARE @recommendedGame BIGINT;
+    DECLARE top_category INT DEFAULT NULL;
+    DECLARE recommended_game BIGINT DEFAULT NULL;
 
-    SELECT TOP 1 @topCategory = c.id_category
+    -- Get most liked category
+    SELECT c.id_category INTO top_category
     FROM enjoy e
     JOIN categorise c ON e.id_game = c.id_game
-    WHERE e.id_user = @id_user
+    WHERE e.id_user = id_user
     GROUP BY c.id_category
-    ORDER BY COUNT(*) DESC;
+    ORDER BY COUNT(*) DESC
+    LIMIT 1;
 
-    SELECT TOP 1 @recommendedGame = c.id_game
+    -- Pick a random game from that category the user hasn’t liked yet
+    SELECT c.id_game INTO recommended_game
     FROM categorise c
-    WHERE c.id_category = @topCategory
+    WHERE c.id_category = top_category
     AND c.id_game NOT IN (
-        SELECT id_game FROM enjoy WHERE id_user = @id_user
+        SELECT id_game FROM enjoy WHERE id_user = id_user
     )
-    ORDER BY NEWID();
+    ORDER BY RAND()
+    LIMIT 1;
 
-    RETURN @recommendedGame;
+    RETURN recommended_game;
 END;
+//
+DELIMITER ;
