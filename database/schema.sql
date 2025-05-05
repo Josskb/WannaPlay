@@ -1,12 +1,10 @@
--- schema.sql
+-- schema.sql for MySQL
 
 CREATE DATABASE IF NOT EXISTS board_game_db;
-GO
 USE board_game_db;
-GO
 
 CREATE TABLE Games (
-    idgame BIGINT IDENTITY(1,1) PRIMARY KEY,
+    idgame BIGINT AUTO_INCREMENT PRIMARY KEY,
     num INT,
     name VARCHAR(50),
     description VARCHAR(255),
@@ -17,11 +15,12 @@ CREATE TABLE Games (
     maxplaytime INT,
     minage INT,
     owned INT,
-    thumbnail VARCHAR(255)
+    thumbnail VARCHAR(255),
+    like_count INT DEFAULT 0
 );
 
 CREATE TABLE Users (
-    id_user INT IDENTITY(1,1) PRIMARY KEY,
+    id_user INT AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(50),
     email VARCHAR(50),
     birthdate DATE,
@@ -30,41 +29,41 @@ CREATE TABLE Users (
 );
 
 CREATE TABLE Category (
-    id_category INT IDENTITY(1,1) PRIMARY KEY,
+    id_category INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(50)
 );
 
 CREATE TABLE Expansion (
-    id_expansion INT IDENTITY(1,1) PRIMARY KEY,
+    id_expansion INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(50),
     id_game BIGINT,
     FOREIGN KEY (id_game) REFERENCES Games(idgame)
 );
 
 CREATE TABLE Designer (
-    id_designer INT IDENTITY(1,1) PRIMARY KEY,
+    id_designer INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(50)
 );
 
 CREATE TABLE Publisher (
-    id_publisher INT IDENTITY(1,1) PRIMARY KEY,
+    id_publisher INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(50)
 );
 
 CREATE TABLE Implementation (
-    id_implementation INT IDENTITY(1,1) PRIMARY KEY,
+    id_implementation INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(50),
     id_game BIGINT,
     FOREIGN KEY (id_game) REFERENCES Games(idgame)
 );
 
 CREATE TABLE Family (
-    id_family INT IDENTITY(1,1) PRIMARY KEY,
+    id_family INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(50)
 );
 
 CREATE TABLE Rating (
-    id_rating INT IDENTITY(1,1) PRIMARY KEY,
+    id_rating INT AUTO_INCREMENT PRIMARY KEY,
     rate DECIMAL(15,2),
     id_category INT,
     id_implementation INT,
