@@ -3,7 +3,7 @@
   <div id="app">
     <header class="app-header">
       <div class="logo-wrapper">
-        <img src="../public/logo_transparent.png" alt="Logo" class="logo" />
+        <img src="/logo_transparent.png" alt="Logo" class="logo" />
         <h1>Wanna Play?</h1>
       </div>
       <nav>

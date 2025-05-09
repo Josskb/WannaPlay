@@ -9,12 +9,14 @@ const PORT = 5001;
 app.use(cors());
 app.use(bodyParser.json());
 
+require('dotenv').config();
+
 // Connect to MYSQL Database
 const db = mysql.createConnection({
-  host: 'localhost',
-  user: 'root',
-  password: 'admin', 
-  database: 'board_game_db',
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME,
 });
 
 db.connect((err) => {
