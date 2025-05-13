@@ -15,6 +15,8 @@
         <button type="submit" class="login-button">Login</button>
       </form>
 
+      <p v-if="errorMessage" class="error-message">{{ errorMessage }}</p>
+
       <p class="login-footer">
         New here?
         <router-link to="/register" class="register-link">Create an account</router-link>
@@ -32,12 +34,14 @@ export default {
   data() {
     return {
       email: '',
-      password: ''
+      password: '',
+      errorMessage: '' // Store error messages here
     };
   },
   methods: {
     async handleLogin(event) {
       event.preventDefault();
+      this.errorMessage = ''; // Clear previous error messages
       try {
         const response = await axios.post('http://localhost:5001/login', {
           email: this.email,
@@ -46,9 +50,10 @@ export default {
 
         const user = response.data.user;
         localStorage.setItem('user', JSON.stringify(user));
-        this.$router.push('/');
+        location.reload(); // Force a page refresh
+        this.$router.push('/'); // Redirect to the home page
       } catch (err) {
-        alert(err.response?.data?.message || 'Login failed');
+        this.errorMessage = err.response?.data?.message || 'Login failed';
       }
     }
   }
@@ -146,6 +151,12 @@ export default {
   font-style: italic;
   color: #8a6f56;
   font-size: 0.85rem;
+}
+
+.error-message {
+  color: #e74c3c;
+  font-size: 0.9rem;
+  margin-top: 10px;
 }
 
 @media (max-width: 500px) {

@@ -23,6 +23,8 @@
         </button>
       </form>
 
+      <p v-if="errorMessage" class="error-message">{{ errorMessage }}</p>
+
       <p class="register-footer">
         Already have an account?
         <router-link to="/login" class="link">Login</router-link>
@@ -44,16 +46,18 @@ export default {
       password: '',
       confirmPassword: '',
       loading: false,
+      errorMessage: '' // Store error messages here
     };
   },
   methods: {
     async handleSubmit() {
+      this.errorMessage = ''; // Clear previous error messages
       if (this.password !== this.confirmPassword) {
-        alert("Passwords don't match!");
+        this.errorMessage = "Passwords don't match!";
         return;
       }
       if (!this.username || !this.email || !this.password) {
-        alert("All fields are required!");
+        this.errorMessage = "All fields are required!";
         return;
       }
       this.loading = true;
@@ -63,20 +67,16 @@ export default {
           email: this.email,
           password: this.password
         });
-        alert(response.data.message || 'Registration successful!');
-        this.$router.push('/login');
+        location.reload(); // Force a page refresh
+        this.$router.push('/'); // Redirect to the home page
       } catch (error) {
-        if (error.response && error.response.data && error.response.data.message) {
-          alert(error.response.data.message);
-        } else {
-          alert('Registration failed.');
-        }
+        this.errorMessage = error.response?.data?.message || 'Registration failed.';
       } finally {
         this.loading = false;
       }
     }
   }
-}
+};
 </script>
 
   
@@ -189,5 +189,10 @@ export default {
     }
   }
 
+  .error-message {
+    color: #e74c3c;
+    font-size: 0.9rem;
+    margin-top: 10px;
+  }
   
   </style>

@@ -79,6 +79,7 @@ CREATE TABLE Rating (
 CREATE TABLE enjoy (
     id_game BIGINT,
     id_user INT,
+    liked BOOLEAN NOT NULL,
     PRIMARY KEY (id_game, id_user),
     FOREIGN KEY (id_game) REFERENCES Games(idgame),
     FOREIGN KEY (id_user) REFERENCES Users(id_user)

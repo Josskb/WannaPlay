@@ -20,6 +20,8 @@
         <input type="password" placeholder="Confirm New Password" v-model="confirmPassword" />
         <button @click="changePassword">Update Password</button>
       </div>
+
+      <p v-if="errorMessage" class="error-message">{{ errorMessage }}</p>
     </div>
   </div>
 </template>
@@ -35,7 +37,8 @@ export default {
       birthdate: '',
       birthdateSaved: false,
       newPassword: '',
-      confirmPassword: ''
+      confirmPassword: '',
+      errorMessage: '' // Store error messages here
     }
   },
   async mounted() {
@@ -46,29 +49,30 @@ export default {
       this.birthdate = this.user.birthdate || ''
       this.birthdateSaved = !!this.user.birthdate
     } catch (err) {
-      alert('Unable to load user profile.')
+      this.errorMessage = 'Unable to load user profile.'
     }
   },
   methods: {
     async saveBirthdate() {
+      this.errorMessage = ''; // Clear previous error messages
       try {
         await axios.post('http://localhost:5001/update-birthdate', {
           id_user: this.user.id_user,
           birthdate: this.birthdate
         })
         this.birthdateSaved = true
-        alert('Birthdate saved!')
       } catch (err) {
-        alert('Failed to update birthdate.')
+        this.errorMessage = 'Failed to update birthdate.'
       }
     },
     async changePassword() {
+      this.errorMessage = ''; // Clear previous error messages
       if (this.newPassword !== this.confirmPassword) {
-        alert('Passwords do not match.')
+        this.errorMessage = 'Passwords do not match.'
         return
       }
       if (!this.newPassword) {
-        alert('Password cannot be empty.')
+        this.errorMessage = 'Password cannot be empty.'
         return
       }
       try {
@@ -78,9 +82,8 @@ export default {
         })
         this.newPassword = ''
         this.confirmPassword = ''
-        alert('Password updated successfully.')
       } catch (err) {
-        alert('Failed to update password.')
+        this.errorMessage = 'Failed to update password.'
       }
     }
   }
@@ -137,5 +140,11 @@ export default {
 }
 .section button:hover {
   background-color: #e0b94e;
+}
+
+.error-message {
+  color: #e74c3c;
+  font-size: 0.9rem;
+  margin-top: 10px;
 }
 </style>

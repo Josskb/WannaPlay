@@ -43,7 +43,7 @@ export default {
   data() {
     return {
       currentGame: null,
-      userId: 4, // Remplacez par l'ID utilisateur dynamique si nécessaire
+      userId: null, // Dynamically set user ID
       isDragging: false,
       startX: 0,
       currentX: 0,
@@ -67,14 +67,18 @@ export default {
   methods: {
     async fetchNextGame() {
       try {
+        console.log('Fetching next game for user:', this.userId);
         const response = await axios.get(`http://localhost:5001/recommendation/${this.userId}`);
+        console.log('Recommendation response:', response.data);
         const gameId = response.data.recommended_game_id;
+
         const gameDetails = await axios.get(`http://localhost:5001/game/${gameId}`);
+        console.log('Game details response:', gameDetails.data);
         this.currentGame = gameDetails.data.game;
         this.resetCardPosition();
       } catch (error) {
-        console.error('Error fetching game recommendation:', error);
-        alert('Failed to fetch game recommendation.');
+        console.error('Error fetching next game:', error.response?.data || error.message);
+        alert('Failed to fetch the next game.');
       }
     },
     startDrag(event) {
@@ -102,25 +106,31 @@ export default {
     },
     async handleLike() {
       try {
-        await axios.post('http://localhost:5001/like-game', {
+        console.log('Sending like request:', { id_user: this.userId, id_game: this.currentGame.idgame, liked: true });
+        const response = await axios.post('http://localhost:5001/react-game', {
           id_user: this.userId,
           id_game: this.currentGame.idgame,
+          liked: true
         });
-        console.log('Liked:', this.currentGame.name);
+        console.log('Like response:', response.data);
         this.animateSwipe('right');
       } catch (error) {
+        console.error('Error liking game:', error.response?.data || error.message);
         alert('Failed to like the game.');
       }
     },
     async handleDislike() {
       try {
-        await axios.post('http://localhost:5001/dislike-game', {
+        console.log('Sending dislike request:', { id_user: this.userId, id_game: this.currentGame.idgame, liked: false });
+        const response = await axios.post('http://localhost:5001/react-game', {
           id_user: this.userId,
           id_game: this.currentGame.idgame,
+          liked: false
         });
-        console.log('Disliked:', this.currentGame.name);
+        console.log('Dislike response:', response.data);
         this.animateSwipe('left');
       } catch (error) {
+        console.error('Error disliking game:', error.response?.data || error.message);
         alert('Failed to dislike the game.');
       }
     },
@@ -142,6 +152,13 @@ export default {
     },
   },
   mounted() {
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      this.userId = JSON.parse(storedUser).id_user; // Dynamically set user ID
+    } else {
+      alert('User not logged in. Redirecting to login page.');
+      this.$router.push('/login');
+    }
     this.fetchNextGame();
   }
 };

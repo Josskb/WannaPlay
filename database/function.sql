@@ -2,17 +2,35 @@
 
 -- Function 1: Count how many games a user liked
 DELIMITER //
-CREATE FUNCTION fn_UserLikesCount (id_user INT)
-RETURNS INT
+CREATE FUNCTION fn_UserLikesCount (input_id_user INT)
+RETURNS JSON
 DETERMINISTIC
 BEGIN
-    DECLARE likes_count INT DEFAULT 0;
+    DECLARE total_swiped INT DEFAULT 0;
+    DECLARE total_liked INT DEFAULT 0;
+    DECLARE total_disliked INT DEFAULT 0;
 
-    SELECT COUNT(*) INTO likes_count
+    -- Nombre total de jeux swipés
+    SELECT COUNT(*) INTO total_swiped
     FROM enjoy
-    WHERE id_user = id_user;
+    WHERE id_user = input_id_user;
 
-    RETURN likes_count;
+    -- Nombre de jeux likés
+    SELECT COUNT(*) INTO total_liked
+    FROM enjoy
+    WHERE id_user = input_id_user AND liked = TRUE;
+
+    -- Nombre de jeux dislikés
+    SELECT COUNT(*) INTO total_disliked
+    FROM enjoy
+    WHERE id_user = input_id_user AND liked = FALSE;
+
+    -- Retourne les résultats sous forme de JSON
+    RETURN JSON_OBJECT(
+        'total_swiped', total_swiped,
+        'total_liked', total_liked,
+        'total_disliked', total_disliked
+    );
 END;
 //
 DELIMITER ;

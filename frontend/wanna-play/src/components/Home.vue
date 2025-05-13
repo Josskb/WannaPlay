@@ -5,7 +5,7 @@
       <section class="card welcome-card">
         <h2 class="card-title">Welcomeee,</h2>
         <p class="card-text">Find the game that correspond to you.</p>
-        <button class="card-button">Let's gooo</button>
+        <button class="card-button" @click="handleButtonClick">Let's gooo</button>
         <img src="../assets/logo_sans_texte.png" alt="icon" class="icon-floating" />
       </section>
   
@@ -29,7 +29,7 @@
         <div class="action-card">
           <img src="../assets/gamelist.jpg" alt="Game list" class="card-image" />
           <h3 class="action-title">Your game list</h3>
-          <router-link to="/list" class="card-link">Go to your game list</router-link>
+          <router-link to="/gamelist" class="card-link">Go to your game list</router-link>
         </div>
       </section>
   
@@ -38,7 +38,17 @@
   
   <script>
   export default {
-    name: 'Home'
+    name: 'Home',
+    methods: {
+      handleButtonClick() {
+        const user = localStorage.getItem('user');
+        if (user) {
+          this.$router.push('/find'); // Redirect to "Find a game" if logged in
+        } else {
+          this.$router.push('/login'); // Redirect to login if not logged in
+        }
+      }
+    }
   }
   </script>
   
@@ -182,4 +192,3 @@
     text-decoration: underline;
   }
   </style>
-  
