@@ -25,7 +25,8 @@ CREATE TABLE Users (
     email VARCHAR(50),
     birthdate DATE,
     firstname VARCHAR(50),
-    lastname VARCHAR(50)
+    lastname VARCHAR(50),
+    password VARCHAR(50)
 );
 
 CREATE TABLE Category (

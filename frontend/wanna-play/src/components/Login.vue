@@ -5,12 +5,12 @@
       <h2 class="login-title">Ready to play?</h2>
       <p class="login-subtext">Log in to get personalized board game recommendations!</p>
 
-      <form class="login-form">
+      <form class="login-form" @submit="handleLogin">
         <label for="email">Email</label>
-        <input type="email" id="email" name="email" placeholder="Enter your email" required />
+        <input type="email" id="email" v-model="email" required />
 
         <label for="password">Password</label>
-        <input type="password" id="password" name="password" placeholder="Enter your password" required />
+        <input type="password" id="password" v-model="password" required />
 
         <button type="submit" class="login-button">Login</button>
       </form>
@@ -25,9 +25,34 @@
 </template>
 
 <script>
+import axios from 'axios';
+
 export default {
-  name: 'Login'
-}
+  name: 'Login',
+  data() {
+    return {
+      email: '',
+      password: ''
+    };
+  },
+  methods: {
+    async handleLogin(event) {
+      event.preventDefault();
+      try {
+        const response = await axios.post('http://localhost:5001/login', {
+          email: this.email,
+          password: this.password
+        });
+
+        const user = response.data.user;
+        localStorage.setItem('user', JSON.stringify(user));
+        this.$router.push('/');
+      } catch (err) {
+        alert(err.response?.data?.message || 'Login failed');
+      }
+    }
+  }
+};
 </script>
 
 <style scoped>

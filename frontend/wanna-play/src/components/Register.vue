@@ -1,64 +1,84 @@
 <template>
-    <div class="register-page">
-      <div class="register-card">
-        <img src="../assets/logo_transparent.png" alt="Meeple Icon" class="register-icon" />
-        <h2 class="register-title">Join the Game!</h2>
-        <p class="register-subtext">Create your account to start discovering your next favorite board game</p>
-  
-        <form class="register-form" @submit.prevent="handleSubmit">
-          <label for="username">Username</label>
-          <input type="text" id="username" v-model="username" required />
-  
-          <label for="email">Email</label>
-          <input type="email" id="email" v-model="email" required />
-  
-          <label for="password">Password</label>
-          <input type="password" id="password" v-model="password" required />
-  
-          <label for="confirmPassword">Confirm Password</label>
-          <input type="password" id="confirmPassword" v-model="confirmPassword" required />
-  
-          <button type="submit" class="register-button">Register</button>
-        </form>
-  
-        <p class="register-footer">
-          Already have an account? 
-          <router-link to="/login" class="link">Login</router-link>
-        </p>
-        <p class="register-quote">🃏 "The best strategy is to just begin!"</p>
-      </div>
+  <div class="register-page">
+    <div class="register-card">
+      <img src="../assets/logo_transparent.png" alt="Meeple Icon" class="register-icon" />
+      <h2 class="register-title">Join the Game!</h2>
+      <p class="register-subtext">Create your account to start discovering your next favorite board game</p>
+
+      <form class="register-form" @submit.prevent="handleSubmit">
+        <label for="username">Username</label>
+        <input type="text" id="username" v-model="username" required />
+
+        <label for="email">Email</label>
+        <input type="email" id="email" v-model="email" required />
+
+        <label for="password">Password</label>
+        <input type="password" id="password" v-model="password" required />
+
+        <label for="confirmPassword">Confirm Password</label>
+        <input type="password" id="confirmPassword" v-model="confirmPassword" required />
+
+        <button type="submit" class="register-button" :disabled="loading">
+          {{ loading ? 'Registering...' : 'Register' }}
+        </button>
+      </form>
+
+      <p class="register-footer">
+        Already have an account?
+        <router-link to="/login" class="link">Login</router-link>
+      </p>
+      <p class="register-quote">🃏 "The best strategy is to just begin!"</p>
     </div>
-  </template>
-  
-  <script>
-  export default {
-    name: 'Register',
-    data() {
-      return {
-        username: '',
-        email: '',
-        password: '',
-        confirmPassword: ''
-      };
-    },
-    methods: {
-      handleSubmit() {
-        if (this.password !== this.confirmPassword) {
-          alert("Passwords don't match!");
-          return;
-        }
-  
-        console.log('Registration attempted with:', {
+  </div>
+</template>
+
+<script>
+import axios from 'axios';
+
+export default {
+  name: 'Register',
+  data() {
+    return {
+      username: '',
+      email: '',
+      password: '',
+      confirmPassword: '',
+      loading: false,
+    };
+  },
+  methods: {
+    async handleSubmit() {
+      if (this.password !== this.confirmPassword) {
+        alert("Passwords don't match!");
+        return;
+      }
+      if (!this.username || !this.email || !this.password) {
+        alert("All fields are required!");
+        return;
+      }
+      this.loading = true;
+      try {
+        const response = await axios.post('http://localhost:5001/register', {
           username: this.username,
           email: this.email,
           password: this.password
         });
-  
-        alert('Registration functionality will be implemented soon!');
+        alert(response.data.message || 'Registration successful!');
+        this.$router.push('/login');
+      } catch (error) {
+        if (error.response && error.response.data && error.response.data.message) {
+          alert(error.response.data.message);
+        } else {
+          alert('Registration failed.');
+        }
+      } finally {
+        this.loading = false;
       }
     }
   }
-  </script>
+}
+</script>
+
   
   <style scoped>
   .register-page {
@@ -130,7 +150,12 @@
     transition: background-color 0.3s ease;
   }
   
-  .register-button:hover {
+  .register-button:disabled {
+    background-color: #e0b94e;
+    cursor: not-allowed;
+  }
+  
+  .register-button:hover:not(:disabled) {
     background-color: #e0b94e;
   }
   
@@ -163,5 +188,6 @@
       padding: 20px;
     }
   }
-  </style>
+
   
+  </style>
