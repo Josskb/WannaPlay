@@ -11,9 +11,9 @@ app.use(cors());
 app.use(bodyParser.json());
 
 const db = mysql.createConnection({
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
+  host: process.env.DB_HOST, 
+  user: process.env.DB_USER, 
+  password: process.env.DB_PASSWORD, 
   database: process.env.DB_NAME,
 });
 
@@ -36,71 +36,47 @@ app.get('/users', async (req, res) => {
   }
 });
 
-// Get user by GET
-app.get('/account/:username', async (req, res) => {
-  const { username } = req.params;
-  try {
-    const [rows] = await db.promise().query(
-      'SELECT id_user, username, email, birthdate FROM users WHERE username = ?',
-      [username]
-    );
-    if (rows.length === 0) return res.status(404).json({ message: 'User not found.' });
-    res.status(200).json({ user: rows[0] });
-  } catch (error) {
-    console.error('Error fetching user details:', error);
-    res.status(500).json({ message: 'Failed to fetch user details.' });
-  }
-});
-
-// Get user by POST
-app.post('/account', async (req, res) => {
-  const { username } = req.body;
-  if (!username) return res.status(400).json({ message: 'Username is required.' });
-  try {
-    const [rows] = await db.promise().query(
-      'SELECT id_user, username, email, birthdate FROM users WHERE username = ?',
-      [username]
-    );
-    if (rows.length === 0) return res.status(404).json({ message: 'User not found.' });
-    res.status(200).json({ user: rows[0] });
-  } catch (error) {
-    console.error('Error fetching user details:', error);
-    res.status(500).json({ message: 'Failed to fetch user details.' });
-  }
-});
-
-// Recommend a game
-app.get('/recommendation/:id_user', async (req, res) => {
+// Get liked games for a user
+app.get('/liked-games/:id_user', async (req, res) => {
   const { id_user } = req.params;
   try {
-    const [rows] = await db.promise().query(
-      'SELECT fn_RecommendRandomGame(?) AS recommended_game',
-      [id_user]
-    );
-    const recommendedGameId = rows[0].recommended_game;
-    if (recommendedGameId === null) {
-      return res.status(404).json({ message: 'No recommendation found for this user.' });
-    }
-    res.status(200).json({ recommended_game_id: recommendedGameId });
+    const [rows] = await db.promise().query('CALL sp_GetLikedGames(?)', [id_user]);
+    res.status(200).json({ games: rows[0] });
   } catch (error) {
-    console.error('Error fetching game recommendation:', error);
-    res.status(500).json({ message: 'Failed to get recommendation.' });
+    console.error('Error fetching liked games:', error);
+    res.status(500).json({ message: 'Failed to fetch liked games.' });
   }
 });
 
-// Get game details
-app.get('/game/:id', async (req, res) => {
-  const { id } = req.params;
+// Like a game
+app.post('/like-game', async (req, res) => {
+  const { id_user, id_game } = req.body;
+
+  if (!id_user || !id_game) {
+    return res.status(400).json({ message: 'User ID and Game ID are required.' });
+  }
+
   try {
-    const [rows] = await db.promise().query(
-      'SELECT idgame, name, description, thumbnail FROM Games WHERE idgame = ?',
-      [id]
-    );
-    if (rows.length === 0) return res.status(404).json({ message: 'Game not found.' });
-    res.status(200).json({ game: rows[0] });
+    // Insert into the 'enjoy' table
+    await db.promise().query('INSERT INTO enjoy (id_user, id_game) VALUES (?, ?)', [id_user, id_game]);
+    res.status(200).json({ message: 'Game liked successfully.' });
   } catch (error) {
-    console.error('Error fetching game details:', error);
-    res.status(500).json({ message: 'Failed to fetch game details.' });
+    console.error('Error liking game:', error);
+    res.status(500).json({ message: 'Failed to like game.' });
+  }
+});
+
+// Unlike a game
+app.post('/unlike-game', async (req, res) => {
+  const { id_user, id_game } = req.body;
+
+  try {
+    // Delete from the 'enjoy' table
+    await db.promise().query('DELETE FROM enjoy WHERE id_user = ? AND id_game = ?', [id_user, id_game]);
+    res.status(200).json({ message: 'Game unliked successfully.' });
+  } catch (error) {
+    console.error('Error unliking game:', error);
+    res.status(500).json({ message: 'Failed to unlike game.' });
   }
 });
 
@@ -148,27 +124,6 @@ app.post('/login', async (req, res) => {
     res.status(500).json({ message: 'Failed to login.' });
   }
 });
-
-app.post('/update-birthdate', async (req, res) => {
-  const { id_user, birthdate } = req.body;
-  try {
-    await db.promise().query('UPDATE users SET birthdate = ? WHERE id_user = ?', [birthdate, id_user]);
-    res.status(200).json({ message: 'Birthdate updated' });
-  } catch (error) {
-    res.status(500).json({ message: 'Failed to update birthdate' });
-  }
-});
-
-app.post('/change-password', async (req, res) => {
-  const { id_user, newPassword } = req.body;
-  try {
-    await db.promise().query('UPDATE users SET password = ? WHERE id_user = ?', [newPassword, id_user]);
-    res.status(200).json({ message: 'Password updated' });
-  } catch (error) {
-    res.status(500).json({ message: 'Failed to update password' });
-  }
-});
-
 
 app.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}`);

@@ -13,7 +13,7 @@
 
       <div class="description-box">
         <div class="desc-icon">
-          <img src="../assets/lightbulb.png" alt="lightbulb" class="light-icon" />
+          <img src="/lightbulb.png" alt="lightbulb" class="light-icon" />
         </div>
         <div class="desc-text">
           <h3 class="game-name">{{ currentGame.name }}</h3>
@@ -43,7 +43,7 @@ export default {
   data() {
     return {
       currentGame: null,
-      userId: 1,
+      userId: 4, // Remplacez par l'ID utilisateur dynamique si nécessaire
       isDragging: false,
       startX: 0,
       currentX: 0,
@@ -100,13 +100,29 @@ export default {
         this.resetCardPosition();
       }
     },
-    handleLike() {
-      console.log('Liked:', this.currentGame.name);
-      this.animateSwipe('right');
+    async handleLike() {
+      try {
+        await axios.post('http://localhost:5001/like-game', {
+          id_user: this.userId,
+          id_game: this.currentGame.idgame,
+        });
+        console.log('Liked:', this.currentGame.name);
+        this.animateSwipe('right');
+      } catch (error) {
+        alert('Failed to like the game.');
+      }
     },
-    handleDislike() {
-      console.log('Disliked:', this.currentGame.name);
-      this.animateSwipe('left');
+    async handleDislike() {
+      try {
+        await axios.post('http://localhost:5001/dislike-game', {
+          id_user: this.userId,
+          id_game: this.currentGame.idgame,
+        });
+        console.log('Disliked:', this.currentGame.name);
+        this.animateSwipe('left');
+      } catch (error) {
+        alert('Failed to dislike the game.');
+      }
     },
     animateSwipe(direction) {
       const offScreenX = direction === 'right' ? 1000 : -1000;

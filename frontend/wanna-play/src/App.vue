@@ -7,8 +7,8 @@
       </div>
       <nav>
         <router-link to="/">Home</router-link>
-        <router-link to="/find">Find a game</router-link>
-        <router-link to="/list">Your game list</router-link>
+        <router-link to="/find" v-if="user">Find a game</router-link>
+        <router-link to="/gamelist" v-if="user">Your game list</router-link>
         <div v-if="user" class="user-info">
           <router-link :to="`/profile/${user.username}`" class="user-profile">
             <i class="fas fa-user"></i> {{ user.username }}
