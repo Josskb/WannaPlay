@@ -210,6 +210,131 @@ app.get('/user-swipe-stats/:id_user', async (req, res) => {
   }
 });
 
+// Check if the user is an admin
+app.get('/is-admin/:id_user', async (req, res) => {
+  const { id_user } = req.params;
+
+  try {
+    const [rows] = await db.promise().query(
+      'SELECT username FROM Users WHERE id_user = ? AND username = "admin"',
+      [id_user]
+    );
+
+    if (rows.length > 0) {
+      res.status(200).json({ isAdmin: true });
+    } else {
+      res.status(403).json({ isAdmin: false });
+    }
+  } catch (error) {
+    console.error('Error checking admin status:', error);
+    res.status(500).json({ message: 'Failed to check admin status.' });
+  }
+});
+
+// Get all users for admin dashboard
+app.get('/admin/users', async (req, res) => {
+  try {
+    const [rows] = await db.promise().query('SELECT * FROM AdminUserList');
+    res.status(200).json(rows);
+  } catch (error) {
+    console.error('Error fetching users for admin:', error);
+    res.status(500).json({ message: 'Failed to fetch users for admin.' });
+  }
+});
+
+// Get all games for admin dashboard
+app.get('/admin/games', async (req, res) => {
+  try {
+    const [rows] = await db.promise().query('SELECT * FROM AdminGameList');
+    res.status(200).json(rows);
+  } catch (error) {
+    console.error('Error fetching games for admin:', error);
+    res.status(500).json({ message: 'Failed to fetch games for admin.' });
+  }
+});
+
+// Search games by name
+app.get('/admin/search-games', async (req, res) => {
+  const { query } = req.query;
+
+  if (!query) {
+    return res.status(400).json({ message: 'Search query is required.' });
+  }
+
+  try {
+    const [rows] = await db.promise().query(
+      `SELECT idgame, name, description, thumbnail
+       FROM Games
+       WHERE LOWER(name) LIKE CONCAT('%', LOWER(?), '%')`,
+      [query]
+    );
+    res.status(200).json(rows);
+  } catch (error) {
+    console.error('Error searching games:', error);
+    res.status(500).json({ message: 'Failed to search games.' });
+  }
+});
+
+// Delete a user (admin only)
+app.post('/admin/delete-user', async (req, res) => {
+  const { userId } = req.body;
+  try {
+    await db.promise().query('DELETE FROM Users WHERE id_user = ?', [userId]);
+    res.status(200).json({ message: 'User deleted successfully.' });
+  } catch (error) {
+    console.error('Error deleting user:', error);
+    res.status(500).json({ message: 'Failed to delete user.' });
+  }
+});
+
+// Delete a game (admin only)
+app.post('/admin/delete-game', async (req, res) => {
+  const { gameId } = req.body;
+  try {
+    await db.promise().query('DELETE FROM Games WHERE idgame = ?', [gameId]);
+    res.status(200).json({ message: 'Game deleted successfully.' });
+  } catch (error) {
+    console.error('Error deleting game:', error);
+    res.status(500).json({ message: 'Failed to delete game.' });
+  }
+});
+
+// Add a new user (admin only)
+app.post('/admin/add-user', async (req, res) => {
+  const { username, email, password } = req.body;
+  if (!username || !email || !password) {
+    return res.status(400).json({ message: 'Missing required fields.' });
+  }
+  try {
+    await db.promise().query(
+      'INSERT INTO Users (username, email, password) VALUES (?, ?, ?)',
+      [username, email, password]
+    );
+    res.status(201).json({ message: 'User added successfully.' });
+  } catch (error) {
+    console.error('Error adding user:', error);
+    res.status(500).json({ message: 'Failed to add user.' });
+  }
+});
+
+// Add a new game (admin only)
+app.post('/admin/add-game', async (req, res) => {
+  const { name, description, yearpublished, maxplayers, playingtime, thumbnail } = req.body;
+  if (!name || !description || !yearpublished || !maxplayers || !playingtime) {
+    return res.status(400).json({ message: 'Missing required fields.' });
+  }
+  try {
+    await db.promise().query(
+      'INSERT INTO Games (name, description, yearpublished, maxplayers, playingtime, thumbnail) VALUES (?, ?, ?, ?, ?, ?)',
+      [name, description, yearpublished, maxplayers, playingtime, thumbnail]
+    );
+    res.status(201).json({ message: 'Game added successfully.' });
+  } catch (error) {
+    console.error('Error adding game:', error);
+    res.status(500).json({ message: 'Failed to add game.' });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}`);
 });

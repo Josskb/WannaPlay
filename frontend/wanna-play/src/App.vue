@@ -9,6 +9,7 @@
         <router-link to="/">Home</router-link>
         <router-link to="/find" v-if="user">Find a game</router-link>
         <router-link to="/gamelist" v-if="user">Your game list</router-link>
+        <router-link to="/admin" v-if="isAdmin">Admin Dashboard</router-link>
         <div v-if="user" class="user-info">
           <router-link :to="`/profile/${user.username}`" class="user-profile">
             <i class="fas fa-user"></i> {{ user.username }}
@@ -48,13 +49,21 @@
 
 <script setup>
 import { ref, onMounted } from 'vue';
+import axios from 'axios';
 
 const user = ref(null);
+const isAdmin = ref(false);
 
-onMounted(() => {
+onMounted(async () => {
   const storedUser = localStorage.getItem('user');
   if (storedUser) {
     user.value = JSON.parse(storedUser);
+    try {
+      const response = await axios.get(`http://localhost:5001/is-admin/${user.value.id_user}`);
+      isAdmin.value = response.data.isAdmin;
+    } catch (error) {
+      console.error('Error checking admin status:', error);
+    }
   }
 });
 
@@ -66,6 +75,7 @@ function handleUserLogin(newUser) {
 function logout() {
   localStorage.removeItem('user');
   user.value = null;
+  isAdmin.value = false;
 }
 </script>
 
