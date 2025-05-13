@@ -1,40 +1,40 @@
 <template>
-    <div class="find-game-page">
-      <div 
-        class="game-card" 
-        v-if="currentGame" 
-        :style="{ transform: cardTransform, opacity: cardOpacity }"
-        @mousedown="startDrag"
-        @mousemove="onDrag"
-        @mouseup="endDrag"
-        @mouseleave="endDrag"
-      >
-        <img :src="currentGame.thumbnail" alt="Game Image" class="game-image" />
-  
-        <div class="description-box">
-          <div class="desc-icon">
-            <img src="../assets/lightbulb.png" alt="lightbulb" class="light-icon" />
-          </div>
-          <div class="desc-text">
-            <h3 class="game-name">{{ currentGame.name }}</h3>
-            <p class="description">
-              {{ currentGame.description || 'No description available.' }}
-            </p>
-            <p class="more">Other information...</p>
-          </div>
+  <div class="find-game-page">
+    <div
+      class="game-card"
+      v-if="currentGame"
+      :style="{ transform: cardTransform, opacity: cardOpacity }"
+      @mousedown="startDrag"
+      @mousemove="onDrag"
+      @mouseup="endDrag"
+      @mouseleave="endDrag"
+    >
+      <img :src="currentGame.thumbnail" alt="Game Image" class="game-image" />
+
+      <div class="description-box">
+        <div class="desc-icon">
+          <img src="../assets/lightbulb.png" alt="lightbulb" class="light-icon" />
+        </div>
+        <div class="desc-text">
+          <h3 class="game-name">{{ currentGame.name }}</h3>
+          <p class="description" v-html="cleanedDescription"></p>
+          <p class="more">Other information...</p>
         </div>
       </div>
-      <div class="action-buttons" v-if="currentGame">
-        <button @click="handleDislike" class="btn dislike">👎</button>
-        <button @click="swipeInfo" class="btn info">❓</button>
-        <button @click="handleLike" class="btn like">👍</button>
-      </div>
-      <div v-else>
-        <p>Loading game recommendation...</p>
-      </div>
     </div>
+
+    <div class="action-buttons" v-if="currentGame">
+      <button @click="handleDislike" class="btn dislike">👎</button>
+      <button @click="swipeInfo" class="btn info">❓</button>
+      <button @click="handleLike" class="btn like">👍</button>
+    </div>
+
+    <div v-else>
+      <p>Loading game recommendation...</p>
+    </div>
+  </div>
 </template>
-  
+
 <script>
 import axios from 'axios';
 
@@ -43,7 +43,7 @@ export default {
   data() {
     return {
       currentGame: null,
-      userId: 1, // Replace with dynamic user ID if available
+      userId: 1,
       isDragging: false,
       startX: 0,
       currentX: 0,
@@ -51,12 +51,24 @@ export default {
       cardOpacity: 1,
     };
   },
+  computed: {
+    cleanedDescription() {
+      if (!this.currentGame?.description) return 'No description available.';
+      return this.currentGame.description
+        .replace(/&#10;/g, '<br>')
+        .replace(/&amp;/g, '&')
+        .replace(/&quot;/g, '"')
+        .replace(/&rsquo;/g, '’')
+        .replace(/&hellip;/g, '…')
+        .replace(/&mdash;/g, '—')
+        .replace(/&ndash;/g, '–');
+    },
+  },
   methods: {
     async fetchNextGame() {
       try {
         const response = await axios.get(`http://localhost:5001/recommendation/${this.userId}`);
         const gameId = response.data.recommended_game_id;
-
         const gameDetails = await axios.get(`http://localhost:5001/game/${gameId}`);
         this.currentGame = gameDetails.data.game;
         this.resetCardPosition();
@@ -72,12 +84,8 @@ export default {
     onDrag(event) {
       if (!this.isDragging) return;
       this.currentX = event.clientX - this.startX;
-
-      // Update card transform for swipe effect
-      const rotation = this.currentX / 10; // Rotate based on drag distance
+      const rotation = this.currentX / 10;
       this.cardTransform = `translateX(${this.currentX}px) rotate(${rotation}deg)`;
-
-      // Update opacity for swipe effect
       this.cardOpacity = 1 - Math.abs(this.currentX) / 300;
     },
     endDrag() {
@@ -85,13 +93,10 @@ export default {
       this.isDragging = false;
 
       if (this.currentX > 100) {
-        // Swipe right (like)
         this.handleLike();
       } else if (this.currentX < -100) {
-        // Swipe left (dislike)
         this.handleDislike();
       } else {
-        // Reset position if swipe is not far enough
         this.resetCardPosition();
       }
     },
@@ -104,12 +109,9 @@ export default {
       this.animateSwipe('left');
     },
     animateSwipe(direction) {
-      // Animate the card off-screen
       const offScreenX = direction === 'right' ? 1000 : -1000;
       this.cardTransform = `translateX(${offScreenX}px) rotate(${direction === 'right' ? 45 : -45}deg)`;
       this.cardOpacity = 0;
-
-      // Wait for animation to complete before fetching the next game
       setTimeout(() => {
         this.fetchNextGame();
       }, 300);
@@ -128,7 +130,7 @@ export default {
   }
 };
 </script>
-  
+
 <style scoped>
 .find-game-page {
   background-color: #fdf8f1;
@@ -235,7 +237,6 @@ export default {
   color: #f4c959;
 }
 
-/* Responsive Design */
 @media (max-width: 500px) {
   .description-box {
     flex-direction: column;
@@ -252,5 +253,4 @@ export default {
     width: 100%;
   }
 }
-
 </style>

@@ -6,8 +6,8 @@ USE board_game_db;
 CREATE TABLE Games (
     idgame BIGINT AUTO_INCREMENT PRIMARY KEY,
     num INT,
-    name VARCHAR(50),
-    description VARCHAR(255),
+    name TEXT,
+    description TEXT,
     yearpublished INT,
     maxplayers INT,
     playingtime INT,
@@ -15,7 +15,7 @@ CREATE TABLE Games (
     maxplaytime INT,
     minage INT,
     owned INT,
-    thumbnail VARCHAR(255),
+    thumbnail TEXT,
     like_count INT DEFAULT 0
 );
 
