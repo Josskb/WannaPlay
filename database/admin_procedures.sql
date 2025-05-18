@@ -71,4 +71,31 @@ BEGIN
 END;
 //
 
+-- Procedure to create a category and associate games with it
+CREATE PROCEDURE sp_CreateCategoryAndAssignGames(
+    IN category_name VARCHAR(50),
+    IN game_ids JSON
+)
+BEGIN
+    DECLARE new_category_id INT;
+
+    -- Insert the new category
+    INSERT INTO Category (name)
+    VALUES (category_name);
+
+    -- Get the ID of the newly created category
+    SET new_category_id = LAST_INSERT_ID();
+
+    -- Associate games with the new category
+    IF JSON_LENGTH(game_ids) > 0 THEN
+        INSERT INTO categorise (id_game, id_category)
+        SELECT CAST(JSON_UNQUOTE(JSON_EXTRACT(game_ids, CONCAT('$[', idx, ']'))) AS UNSIGNED), new_category_id
+        FROM (
+            SELECT 0 AS idx UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4
+        ) AS indices
+        WHERE idx < JSON_LENGTH(game_ids);
+    END IF;
+END;
+//
+
 DELIMITER ;

@@ -97,8 +97,8 @@ CREATE TABLE design (
     id_game BIGINT,
     id_designer INT,
     PRIMARY KEY (id_game, id_designer),
-    FOREIGN KEY (id_game) REFERENCES Games(idgame),
-    FOREIGN KEY (id_designer) REFERENCES Designer(id_designer)
+    FOREIGN KEY (id_game) REFERENCES Games(idgame) ON DELETE CASCADE,
+    FOREIGN KEY (id_designer) REFERENCES Designer(id_designer) ON DELETE CASCADE
 );
 
 CREATE TABLE publish (
@@ -116,3 +116,8 @@ CREATE TABLE own (
     FOREIGN KEY (id_game) REFERENCES Games(idgame),
     FOREIGN KEY (id_family) REFERENCES Family(id_family)
 );
+
+ALTER TABLE categorise DROP FOREIGN KEY categorise_ibfk_1;
+
+ALTER TABLE categorise
+ADD CONSTRAINT categorise_ibfk_1 FOREIGN KEY (id_game) REFERENCES Games(idgame) ON DELETE CASCADE;

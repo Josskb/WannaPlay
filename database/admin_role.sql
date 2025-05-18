@@ -1,3 +1,9 @@
+-- Vérifiez si l'utilisateur `admin` existe déjà
+SELECT User, Host FROM mysql.user WHERE User = 'admin';
+
+-- Supprimez l'utilisateur existant (si nécessaire)
+DROP USER 'admin'@'localhost';
+
 -- Create an admin user with specific privileges
 CREATE USER 'admin'@'localhost' IDENTIFIED BY 'admin_password';
 
@@ -18,3 +24,6 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON board_game_db.enjoy TO 'admin'@'localhos
 GRANT SELECT, INSERT, UPDATE, DELETE ON board_game_db.Expansion TO 'admin'@'localhost';
 GRANT SELECT, INSERT, UPDATE, DELETE ON board_game_db.Designer TO 'admin'@'localhost';
 GRANT SELECT, INSERT, UPDATE, DELETE ON board_game_db.Publisher TO 'admin'@'localhost';
+
+-- Apply the changes
+FLUSH PRIVILEGES;

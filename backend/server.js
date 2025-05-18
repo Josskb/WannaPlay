@@ -320,9 +320,11 @@ app.post('/admin/add-user', async (req, res) => {
 // Add a new game (admin only)
 app.post('/admin/add-game', async (req, res) => {
   const { name, description, yearpublished, maxplayers, playingtime, thumbnail } = req.body;
+
   if (!name || !description || !yearpublished || !maxplayers || !playingtime) {
     return res.status(400).json({ message: 'Missing required fields.' });
   }
+
   try {
     await db.promise().query(
       'INSERT INTO Games (name, description, yearpublished, maxplayers, playingtime, thumbnail) VALUES (?, ?, ?, ?, ?, ?)',
@@ -330,8 +332,390 @@ app.post('/admin/add-game', async (req, res) => {
     );
     res.status(201).json({ message: 'Game added successfully.' });
   } catch (error) {
-    console.error('Error adding game:', error);
+    console.error('Error adding game:', error); // Log the error for debugging
     res.status(500).json({ message: 'Failed to add game.' });
+  }
+});
+
+// Add a new game with details (categories and designers)
+app.post('/admin/add-game-with-details', async (req, res) => {
+  const { name, description, yearpublished, maxplayers, playingtime, thumbnail, categories, designers } = req.body;
+
+  if (!name || !description || !yearpublished || !maxplayers || !playingtime) {
+    return res.status(400).json({ message: 'Missing required fields.' });
+  }
+
+  try {
+    await db.promise().query('CALL sp_AddGameWithDetails(?, ?, ?, ?, ?, ?, ?, ?)', [
+      name,
+      description,
+      yearpublished,
+      maxplayers,
+      playingtime,
+      thumbnail,
+      JSON.stringify(categories),
+      JSON.stringify(designers),
+    ]);
+    res.status(201).json({ message: 'Game with details added successfully.' });
+  } catch (error) {
+    console.error('Error adding game with details:', error);
+    res.status(500).json({ message: 'Failed to add game with details.' });
+  }
+});
+
+// Create a category and assign games to it (admin only)
+app.post('/admin/create-category', async (req, res) => {
+  const { categoryName, gameIds } = req.body;
+
+  if (!categoryName || !Array.isArray(gameIds)) {
+    return res.status(400).json({ message: 'Category name and game IDs are required.' });
+  }
+
+  try {
+    await db.promise().query('CALL sp_CreateCategoryAndAssignGames(?, ?)', [
+      categoryName,
+      JSON.stringify(gameIds),
+    ]);
+    res.status(201).json({ message: 'Category created and games assigned successfully.' });
+  } catch (error) {
+    console.error('Error creating category and assigning games:', error);
+    res.status(500).json({ message: 'Failed to create category and assign games.' });
+  }
+});
+
+// Get games by category (admin only)
+app.get('/admin/games-by-category', async (req, res) => {
+  const { categoryName } = req.query;
+
+  if (!categoryName) {
+    return res.status(400).json({ message: 'Category name is required.' });
+  }
+
+  try {
+    const [rows] = await db.promise().query('CALL sp_GetGamesByCategory(?)', [categoryName]);
+    res.status(200).json(rows[0]); // Return the games in the specified category
+  } catch (error) {
+    console.error('Error fetching games by category:', error);
+    res.status(500).json({ message: 'Failed to fetch games by category.' });
+  }
+});
+
+// Get all categories (admin only)
+app.get('/admin/categories', async (req, res) => {
+  try {
+    const [rows] = await db.promise().query('SELECT id_category, name FROM Category');
+    res.status(200).json(rows);
+  } catch (error) {
+    console.error('Error fetching categories:', error);
+    res.status(500).json({ message: 'Failed to fetch categories.' });
+  }
+});
+
+// Add a game to a category (admin only)
+app.post('/admin/add-game-to-category', async (req, res) => {
+  const { gameId, categoryId } = req.body;
+
+  if (!gameId || !categoryId) {
+    return res.status(400).json({ message: 'Game ID and Category ID are required.' });
+  }
+
+  try {
+    await db.promise().query(
+      'INSERT IGNORE INTO categorise (id_game, id_category) VALUES (?, ?)',
+      [gameId, categoryId]
+    );
+    res.status(201).json({ message: 'Game added to category successfully.' });
+  } catch (error) {
+    console.error('Error adding game to category:', error);
+    res.status(500).json({ message: 'Failed to add game to category.' });
+  }
+}
+);
+
+// Create a designer (admin only)
+app.post('/admin/create-designer', async (req, res) => {
+  const { name } = req.body;
+
+  if (!name) {
+    return res.status(400).json({ message: 'Designer name is required.' });
+  }
+
+  try {
+    await db.promise().query('INSERT INTO Designer (name) VALUES (?)', [name]);
+    res.status(201).json({ message: 'Designer created successfully.' });
+  } catch (error) {
+    console.error('Error creating designer:', error);
+    res.status(500).json({ message: 'Failed to create designer.' });
+  }
+});
+
+// Create a publisher (admin only)
+app.post('/admin/create-publisher', async (req, res) => {
+  const { name } = req.body;
+
+  if (!name) {
+    return res.status(400).json({ message: 'Publisher name is required.' });
+  }
+
+  try {
+    await db.promise().query('INSERT INTO Publisher (name) VALUES (?)', [name]);
+    res.status(201).json({ message: 'Publisher created successfully.' });
+  } catch (error) {
+    console.error('Error creating publisher:', error);
+    res.status(500).json({ message: 'Failed to create publisher.' });
+  }
+});
+
+// Create an implementation (admin only)
+app.post('/admin/create-implementation', async (req, res) => {
+  const { name } = req.body;
+
+  if (!name) {
+    return res.status(400).json({ message: 'Implementation name is required.' });
+  }
+
+  try {
+    await db.promise().query('INSERT INTO Implementation (name) VALUES (?)', [name]);
+    res.status(201).json({ message: 'Implementation created successfully.' });
+  } catch (error) {
+    console.error('Error creating implementation:', error);
+    res.status(500).json({ message: 'Failed to create implementation.' });
+  }
+});
+
+// Create a family (admin only)
+app.post('/admin/create-family', async (req, res) => {
+  const { name } = req.body;
+
+  if (!name) {
+    return res.status(400).json({ message: 'Family name is required.' });
+  }
+
+  try {
+    await db.promise().query('INSERT INTO Family (name) VALUES (?)', [name]);
+    res.status(201).json({ message: 'Family created successfully.' });
+  } catch (error) {
+    console.error('Error creating family:', error);
+    res.status(500).json({ message: 'Failed to create family.' });
+  }
+});
+
+// Get all designers (admin only)
+app.get('/admin/designers', async (req, res) => {
+  try {
+    const [rows] = await db.promise().query('SELECT id_designer, name FROM Designer');
+    res.status(200).json(rows);
+  } catch (error) {
+    console.error('Error fetching designers:', error);
+    res.status(500).json({ message: 'Failed to fetch designers.' });
+  }
+});
+
+// Get all publishers (admin only)
+app.get('/admin/publishers', async (req, res) => {
+  try {
+    const [rows] = await db.promise().query('SELECT id_publisher, name FROM Publisher');
+    res.status(200).json(rows);
+  } catch (error) {
+    console.error('Error fetching publishers:', error);
+    res.status(500).json({ message: 'Failed to fetch publishers.' });
+  }
+});
+
+// Get all implementations (admin only)
+app.get('/admin/implementations', async (req, res) => {
+  try {
+    const [rows] = await db.promise().query('SELECT id_implementation, name FROM Implementation');
+    res.status(200).json(rows);
+  } catch (error) {
+    console.error('Error fetching implementations:', error);
+    res.status(500).json({ message: 'Failed to fetch implementations.' });
+  }
+});
+
+// Get all families (admin only)
+app.get('/admin/families', async (req, res) => {
+  try {
+    const [rows] = await db.promise().query('SELECT id_family, name FROM Family');
+    res.status(200).json(rows);
+  } catch (error) {
+    console.error('Error fetching families:', error);
+    res.status(500).json({ message: 'Failed to fetch families.' });
+  }
+});
+
+// Get games by designer (admin only)
+app.get('/admin/games-by-designer', async (req, res) => {
+  const { designerName } = req.query;
+
+  if (!designerName) {
+    return res.status(400).json({ message: 'Designer name is required.' });
+  }
+
+  try {
+    const [rows] = await db.promise().query(
+      `SELECT G.idgame, G.name, G.description, G.thumbnail
+       FROM Games G
+       JOIN design D ON G.idgame = D.id_game
+       JOIN Designer De ON D.id_designer = De.id_designer
+       WHERE De.name = ?`,
+      [designerName]
+    );
+    res.status(200).json(rows);
+  } catch (error) {
+    console.error('Error fetching games by designer:', error);
+    res.status(500).json({ message: 'Failed to fetch games by designer.' });
+  }
+});
+
+// Get games by publisher (admin only)
+app.get('/admin/games-by-publisher', async (req, res) => {
+  const { publisherName } = req.query;
+
+  if (!publisherName) {
+    return res.status(400).json({ message: 'Publisher name is required.' });
+  }
+
+  try {
+    const [rows] = await db.promise().query(
+      `SELECT G.idgame, G.name, G.description, G.thumbnail
+       FROM Games G
+       JOIN publish P ON G.idgame = P.id_game
+       JOIN Publisher Pu ON P.id_publisher = Pu.id_publisher
+       WHERE Pu.name = ?`,
+      [publisherName]
+    );
+    res.status(200).json(rows);
+  } catch (error) {
+    console.error('Error fetching games by publisher:', error);
+    res.status(500).json({ message: 'Failed to fetch games by publisher.' });
+  }
+});
+
+// Get games by implementation (admin only)
+app.get('/admin/games-by-implementation', async (req, res) => {
+  const { implementationName } = req.query;
+
+  if (!implementationName) {
+    return res.status(400).json({ message: 'Implementation name is required.' });
+  }
+
+  try {
+    const [rows] = await db.promise().query(
+      `SELECT G.idgame, G.name, G.description, G.thumbnail
+       FROM Games G
+       JOIN Implementation I ON G.idgame = I.id_game
+       WHERE I.name = ?`,
+      [implementationName]
+    );
+    res.status(200).json(rows);
+  } catch (error) {
+    console.error('Error fetching games by implementation:', error);
+    res.status(500).json({ message: 'Failed to fetch games by implementation.' });
+  }
+});
+
+// Get games by family (admin only)
+app.get('/admin/games-by-family', async (req, res) => {
+  const { familyName } = req.query;
+
+  if (!familyName) {
+    return res.status(400).json({ message: 'Family name is required.' });
+  }
+
+  try {
+    const [rows] = await db.promise().query(
+      `SELECT G.idgame, G.name, G.description, G.thumbnail
+       FROM Games G
+       JOIN own O ON G.idgame = O.id_game
+       JOIN Family F ON O.id_family = F.id_family
+       WHERE F.name = ?`,
+      [familyName]
+    );
+    res.status(200).json(rows);
+  } catch (error) {
+    console.error('Error fetching games by family:', error);
+    res.status(500).json({ message: 'Failed to fetch games by family.' });
+  }
+});
+
+// Add a game to a designer (admin only)
+app.post('/admin/add-game-to-designer', async (req, res) => {
+  const { gameId, entityId } = req.body;
+
+  if (!gameId || !entityId) {
+    return res.status(400).json({ message: 'Game ID and Designer ID are required.' });
+  }
+
+  try {
+    await db.promise().query(
+      'INSERT IGNORE INTO design (id_game, id_designer) VALUES (?, ?)',
+      [gameId, entityId]
+    );
+    res.status(201).json({ message: 'Game added to designer successfully.' });
+  } catch (error) {
+    console.error('Error adding game to designer:', error);
+    res.status(500).json({ message: 'Failed to add game to designer.' });
+  }
+});
+
+// Add a game to a publisher (admin only)
+app.post('/admin/add-game-to-publisher', async (req, res) => {
+  const { gameId, entityId } = req.body;
+
+  if (!gameId || !entityId) {
+    return res.status(400).json({ message: 'Game ID and Publisher ID are required.' });
+  }
+
+  try {
+    await db.promise().query(
+      'INSERT IGNORE INTO publish (id_game, id_publisher) VALUES (?, ?)',
+      [gameId, entityId]
+    );
+    res.status(201).json({ message: 'Game added to publisher successfully.' });
+  } catch (error) {
+    console.error('Error adding game to publisher:', error);
+    res.status(500).json({ message: 'Failed to add game to publisher.' });
+  }
+});
+
+// Add a game to an implementation (admin only)
+app.post('/admin/add-game-to-implementation', async (req, res) => {
+  const { gameId, entityId } = req.body;
+
+  if (!gameId || !entityId) {
+    return res.status(400).json({ message: 'Game ID and Implementation ID are required.' });
+  }
+
+  try {
+    await db.promise().query(
+      'INSERT IGNORE INTO Implementation (id_game, id_implementation) VALUES (?, ?)',
+      [gameId, entityId]
+    );
+    res.status(201).json({ message: 'Game added to implementation successfully.' });
+  } catch (error) {
+    console.error('Error adding game to implementation:', error);
+    res.status(500).json({ message: 'Failed to add game to implementation.' });
+  }
+});
+
+// Add a game to a family (admin only)
+app.post('/admin/add-game-to-family', async (req, res) => {
+  const { gameId, entityId } = req.body;
+
+  if (!gameId || !entityId) {
+    return res.status(400).json({ message: 'Game ID and Family ID are required.' });
+  }
+
+  try {
+    await db.promise().query(
+      'INSERT IGNORE INTO own (id_game, id_family) VALUES (?, ?)',
+      [gameId, entityId]
+    );
+    res.status(201).json({ message: 'Game added to family successfully.' });
+  } catch (error) {
+    console.error('Error adding game to family:', error);
+    res.status(500).json({ message: 'Failed to add game to family.' });
   }
 });
 
