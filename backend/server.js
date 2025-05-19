@@ -76,8 +76,8 @@ app.post('/react-game', async (req, res) => {
 app.get('/liked-games/:id_user', async (req, res) => {
   const { id_user } = req.params;
   try {
-    const [rows] = await db.promise().query('CALL sp_GetLikedGames(?)', [id_user]);
-    res.status(200).json({ games: rows[0] });
+    const [rows] = await db.promise().query('CALL sp_GetLikedGames(?)', [id_user]); // Use stored procedure
+    res.status(200).json({ games: rows[0] }); // Return the first result set
   } catch (error) {
     console.error('Error fetching liked games:', error);
     res.status(500).json({ message: 'Failed to fetch liked games.' });
@@ -88,8 +88,8 @@ app.get('/liked-games/:id_user', async (req, res) => {
 app.get('/disliked-games/:id_user', async (req, res) => {
   const { id_user } = req.params;
   try {
-    const [rows] = await db.promise().query('CALL sp_GetDislikedGames(?)', [id_user]);
-    res.status(200).json({ games: rows[0] });
+    const [rows] = await db.promise().query('CALL sp_GetDislikedGames(?)', [id_user]); // Use stored procedure
+    res.status(200).json({ games: rows[0] }); // Return the first result set
   } catch (error) {
     console.error('Error fetching disliked games:', error);
     res.status(500).json({ message: 'Failed to fetch disliked games.' });
@@ -110,10 +110,17 @@ app.post('/register', async (req, res) => {
     if (existing.length > 0) {
       return res.status(409).json({ message: 'Username or email already exists.' });
     }
-    await db.promise().query(
+
+    // Insert the new user
+    const [result] = await db.promise().query(
       'INSERT INTO users (username, email, password, firstname, lastname) VALUES (?, ?, ?, ?, ?)',
       [username, email, password, firstname, lastname]
     );
+
+    // Ensure the user starts with no liked or disliked games
+    const newUserId = result.insertId;
+    await db.promise().query('DELETE FROM enjoy WHERE id_user = ?', [newUserId]);
+
     res.status(201).json({ message: 'User registered successfully.' });
   } catch (error) {
     console.error('Error registering user:', error);
@@ -223,7 +230,7 @@ app.get('/is-admin/:id_user', async (req, res) => {
     if (rows.length > 0) {
       res.status(200).json({ isAdmin: true });
     } else {
-      res.status(403).json({ isAdmin: false });
+      res.status(200).json({ isAdmin: false }); // Return 200 with isAdmin: false instead of 403
     }
   } catch (error) {
     console.error('Error checking admin status:', error);

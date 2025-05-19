@@ -6,6 +6,12 @@
       <p class="register-subtext">Create your account to start discovering your next favorite board game</p>
 
       <form class="register-form" @submit.prevent="handleSubmit">
+        <label for="firstname">First Name</label>
+        <input type="text" id="firstname" v-model="firstname" required />
+
+        <label for="lastname">Last Name</label>
+        <input type="text" id="lastname" v-model="lastname" required />
+
         <label for="username">Username</label>
         <input type="text" id="username" v-model="username" required />
 
@@ -41,6 +47,8 @@ export default {
   name: 'Register',
   data() {
     return {
+      firstname: '',
+      lastname: '',
       username: '',
       email: '',
       password: '',
@@ -56,18 +64,19 @@ export default {
         this.errorMessage = "Passwords don't match!";
         return;
       }
-      if (!this.username || !this.email || !this.password) {
+      if (!this.firstname || !this.lastname || !this.username || !this.email || !this.password) {
         this.errorMessage = "All fields are required!";
         return;
       }
       this.loading = true;
       try {
-        const response = await axios.post('http://localhost:5001/register', {
+        await axios.post('http://localhost:5001/register', {
+          firstname: this.firstname,
+          lastname: this.lastname,
           username: this.username,
           email: this.email,
           password: this.password
         });
-        location.reload(); // Force a page refresh
         this.$router.push('/'); // Redirect to the home page
       } catch (error) {
         this.errorMessage = error.response?.data?.message || 'Registration failed.';

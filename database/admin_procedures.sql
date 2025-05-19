@@ -98,4 +98,7 @@ BEGIN
 END;
 //
 
+-- Ensure the user starts with no liked or disliked games
+DELETE FROM enjoy WHERE id_user = <user_id>;
+
 DELIMITER ;

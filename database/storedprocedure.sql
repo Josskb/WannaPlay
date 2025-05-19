@@ -44,10 +44,10 @@ CREATE PROCEDURE sp_GetLikedGames(
     IN id_user INT
 )
 BEGIN
-    SELECT G.idgame, G.name, G.description, G.thumbnail
+    SELECT DISTINCT G.idgame, G.name, G.description, G.thumbnail
     FROM enjoy E
     JOIN Games G ON E.id_game = G.idgame
-    WHERE E.id_user = sp_GetLikedGames.id_user AND E.liked = TRUE;
+    WHERE E.id_user = id_user AND E.liked = TRUE; -- Ensure filtering by id_user and liked = TRUE
 END;
 //
 
@@ -57,10 +57,10 @@ CREATE PROCEDURE sp_GetDislikedGames(
     IN id_user INT
 )
 BEGIN
-    SELECT G.idgame, G.name, G.description, G.thumbnail
+    SELECT DISTINCT G.idgame, G.name, G.description, G.thumbnail
     FROM enjoy E
     JOIN Games G ON E.id_game = G.idgame
-    WHERE E.id_user = sp_GetDislikedGames.id_user AND E.liked = FALSE;
+    WHERE E.id_user = id_user AND E.liked = FALSE; -- Ensure filtering by id_user and liked = FALSE
 END;
 //
 

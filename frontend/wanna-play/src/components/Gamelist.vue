@@ -9,9 +9,9 @@
       <h3>Liked Games</h3>
       <div v-if="likedGames.length > 0" class="game-table">
         <transition-group name="move-category" tag="div">
-          <div class="game-row" v-for="game in likedGames" :key="game.idgame">
+          <div class="game-row" v-for="(game, index) in likedGames" :key="game.idgame || index">
             <img :src="game.thumbnail" alt="Game thumbnail" class="game-thumbnail" />
-            <div class="game-name">{{ game.name }}</div>
+            <div class="game-name">{{ game.name }}</div> <!-- Ensure game.name is displayed -->
             <div class="game-actions">
               <button @click="reactToGame(game.idgame, false)" class="thumbs-down">
                 👎 Unlike
@@ -27,9 +27,9 @@
       <h3>Disliked Games</h3>
       <div v-if="dislikedGames.length > 0" class="game-table">
         <transition-group name="move-category" tag="div">
-          <div class="game-row" v-for="game in dislikedGames" :key="game.idgame">
+          <div class="game-row" v-for="(game, index) in dislikedGames" :key="game.idgame || index">
             <img :src="game.thumbnail" alt="Game thumbnail" class="game-thumbnail" />
-            <div class="game-name">{{ game.name }}</div>
+            <div class="game-name">{{ game.name }}</div> <!-- Ensure game.name is displayed -->
             <div class="game-actions">
               <button @click="reactToGame(game.idgame, true)" class="thumbs-up">
                 👍 Like
@@ -57,21 +57,29 @@ export default {
         total_liked: 0,
         total_disliked: 0,
       },
-      userId: 1, // Replace with dynamic user ID if available
+      userId: null, // Set to null initially
     };
   },
   async mounted() {
-    await this.fetchGames();
-    await this.fetchSwipeStats();
+    // Fetch the logged-in user's ID dynamically
+    const user = JSON.parse(localStorage.getItem("user")); // Assuming user info is stored in localStorage
+    if (user && user.id_user) {
+      this.userId = user.id_user;
+      await this.fetchGames();
+      await this.fetchSwipeStats();
+    } else {
+      alert("User not logged in.");
+    }
   },
   methods: {
     async fetchGames() {
       try {
         const likedGamesResponse = await axios.get(`http://localhost:5001/liked-games/${this.userId}`);
+        this.likedGames = likedGamesResponse.data.games || []; // Ensure empty array if no games are returned
         const dislikedGamesResponse = await axios.get(`http://localhost:5001/disliked-games/${this.userId}`);
-        this.likedGames = likedGamesResponse.data.games;
-        this.dislikedGames = dislikedGamesResponse.data.games;
+        this.dislikedGames = dislikedGamesResponse.data.games || []; // Ensure empty array if no games are returned
       } catch (err) {
+        console.error("Error fetching games:", err);
         alert("Unable to load games.");
       }
     },
@@ -92,8 +100,8 @@ export default {
           id_game: gameId,
           liked,
         });
-        await this.fetchGames();
-        await this.fetchSwipeStats();
+        await this.fetchGames(); // Refresh the liked and disliked games
+        await this.fetchSwipeStats(); // Refresh the swipe stats
       } catch (err) {
         console.error("Error reacting to game:", err);
         alert("Failed to react to the game.");
