@@ -150,16 +150,17 @@ export default {
         alert('Failed to dislike the game.');
       }
     },
+    swipeInfo() {
+      this.animateSwipe('none'); // Skip to the next game without any reaction
+    },
     animateSwipe(direction) {
-      const offScreenX = direction === 'right' ? 1000 : -1000;
-      this.cardTransform = `translateX(${offScreenX}px) rotate(${direction === 'right' ? 45 : -45}deg)`;
-      this.cardOpacity = 0;
+      const offScreenX = direction === 'right' ? 1000 : direction === 'left' ? -1000 : 0;
+      const rotation = direction === 'right' ? 45 : direction === 'left' ? -45 : 0;
+      this.cardTransform = `translateX(${offScreenX}px) rotate(${rotation}deg)`;
+      this.cardOpacity = direction === 'none' ? 0 : this.cardOpacity;
       setTimeout(() => {
         this.fetchNextGame();
       }, 300);
-    },
-    swipeInfo() {
-      alert(`More info coming soon about ${this.currentGame.name}!`);
     },
     resetCardPosition() {
       this.cardTransform = 'translateX(0px) rotate(0deg)';
