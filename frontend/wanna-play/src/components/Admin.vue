@@ -13,6 +13,8 @@
       <form v-if="showUserForm" @submit.prevent="addUser" class="add-form">
         <h4>Add User</h4>
         <div class="form-group">
+          <input type="text" v-model="newUser.firstname" placeholder="First Name" required />
+          <input type="text" v-model="newUser.lastname" placeholder="Last Name" required />
           <input type="text" v-model="newUser.username" placeholder="Username" required />
           <input type="email" v-model="newUser.email" placeholder="Email" required />
           <input type="password" v-model="newUser.password" placeholder="Password" required />
@@ -355,6 +357,8 @@ export default {
       filteredGames: [],
       searchQuery: "",
       newUser: {
+        firstname: "",
+        lastname: "",
         username: "",
         email: "",
         password: "",
@@ -442,7 +446,7 @@ export default {
       try {
         await axios.post("http://localhost:5001/admin/add-user", this.newUser);
         alert("User added successfully.");
-        this.newUser = { username: "", email: "", password: "" };
+        this.newUser = { firstname: "", lastname: "", username: "", email: "", password: "" };
         this.fetchUsers();
       } catch (error) {
         console.error("Error adding user:", error);
@@ -937,15 +941,18 @@ h2 {
 
 .entities-container {
   margin-bottom: 20px;
+  
 }
 
 .entity-card {
+  display: inline-block;
   background-color: #f4c959;
   color: white;
   padding: 20px;
   border-radius: 10px;
   cursor: pointer;
   text-align: center;
+  margin : 20px;
   flex: 1 1 calc(25% - 20px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }

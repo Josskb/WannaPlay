@@ -2,7 +2,7 @@
     <div class="home">
   
       <!-- Welcome Block -->
-      <section class="card welcome-card">
+      <section class="card welcome-card animate-fade-in">
         <h2 class="card-title">Welcomeee,</h2>
         <p class="card-text">Find the game that correspond to you.</p>
         <button class="card-button" @click="handleButtonClick">Let's gooo</button>
@@ -10,7 +10,7 @@
       </section>
   
       <!-- Game Database Block -->
-      <section class="game-section">
+      <section class="game-section animate-slide-in">
         <img src="../assets/gameset.png" alt="gameset" class="game-image" />
         <div class="card database-card">
           <h2 class="card-title">The GAME Database,</h2>
@@ -21,12 +21,12 @@
   
       <!-- Action Cards -->
       <section class="action-cards">
-        <div class="action-card">
+        <div class="action-card animate-zoom-in">
           <img src="../assets/findgame.jpg" alt="Find a game" class="card-image" />
           <h3 class="action-title">Find a game</h3>
           <router-link to="/find" class="card-link">Go find a game</router-link>
         </div>
-        <div class="action-card">
+        <div class="action-card animate-zoom-in">
           <img src="../assets/gamelist.jpg" alt="Game list" class="card-image" />
           <h3 class="action-title">Your game list</h3>
           <router-link to="/gamelist" class="card-link">Go to your game list</router-link>
@@ -191,4 +191,50 @@
     font-weight: bold;
     text-decoration: underline;
   }
+  
+  /* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes zoomIn {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 1s ease-out;
+}
+
+.animate-slide-in {
+  animation: slideIn 1s ease-out;
+}
+
+.animate-zoom-in {
+  animation: zoomIn 0.8s ease-out;
+}
   </style>

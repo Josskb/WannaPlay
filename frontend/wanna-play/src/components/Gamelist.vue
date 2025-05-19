@@ -1,5 +1,5 @@
 <template>
-  <div class="game-list">
+  <div class="game-list animate-fade-in">
     <h2>Your Game List</h2>
     <p class="swipe-stats">
       Total swiped: {{ swipeStats.total_swiped }} | Liked: {{ swipeStats.total_liked }} | Disliked: {{ swipeStats.total_disliked }}
@@ -8,26 +8,17 @@
     <div class="liked-games">
       <h3>Liked Games</h3>
       <div v-if="likedGames.length > 0" class="game-table">
-        <div
-          class="game-row"
-          v-for="game in likedGames"
-          :key="game.idgame"
-        >
-          <img
-            :src="game.thumbnail"
-            alt="Game thumbnail"
-            class="game-thumbnail"
-          />
-          <div class="game-name">{{ game.name }}</div>
-          <div class="game-actions">
-            <button
-              @click="reactToGame(game.idgame, false)"
-              class="thumbs-down"
-            >
-              👎 Unlike
-            </button>
+        <transition-group name="move-category" tag="div">
+          <div class="game-row" v-for="game in likedGames" :key="game.idgame">
+            <img :src="game.thumbnail" alt="Game thumbnail" class="game-thumbnail" />
+            <div class="game-name">{{ game.name }}</div>
+            <div class="game-actions">
+              <button @click="reactToGame(game.idgame, false)" class="thumbs-down">
+                👎 Unlike
+              </button>
+            </div>
           </div>
-        </div>
+        </transition-group>
       </div>
       <p v-else>No liked games yet.</p>
     </div>
@@ -35,26 +26,17 @@
     <div class="disliked-games">
       <h3>Disliked Games</h3>
       <div v-if="dislikedGames.length > 0" class="game-table">
-        <div
-          class="game-row"
-          v-for="game in dislikedGames"
-          :key="game.idgame"
-        >
-          <img
-            :src="game.thumbnail"
-            alt="Game thumbnail"
-            class="game-thumbnail"
-          />
-          <div class="game-name">{{ game.name }}</div>
-          <div class="game-actions">
-            <button
-              @click="reactToGame(game.idgame, true)"
-              class="thumbs-up"
-            >
-              👍 Like
-            </button>
+        <transition-group name="move-category" tag="div">
+          <div class="game-row" v-for="game in dislikedGames" :key="game.idgame">
+            <img :src="game.thumbnail" alt="Game thumbnail" class="game-thumbnail" />
+            <div class="game-name">{{ game.name }}</div>
+            <div class="game-actions">
+              <button @click="reactToGame(game.idgame, true)" class="thumbs-up">
+                👍 Like
+              </button>
+            </div>
           </div>
-        </div>
+        </transition-group>
       </div>
       <p v-else>No disliked games yet.</p>
     </div>
@@ -85,12 +67,8 @@ export default {
   methods: {
     async fetchGames() {
       try {
-        const likedGamesResponse = await axios.get(
-          `http://localhost:5001/liked-games/${this.userId}`
-        );
-        const dislikedGamesResponse = await axios.get(
-          `http://localhost:5001/disliked-games/${this.userId}`
-        );
+        const likedGamesResponse = await axios.get(`http://localhost:5001/liked-games/${this.userId}`);
+        const dislikedGamesResponse = await axios.get(`http://localhost:5001/disliked-games/${this.userId}`);
         this.likedGames = likedGamesResponse.data.games;
         this.dislikedGames = dislikedGamesResponse.data.games;
       } catch (err) {
@@ -99,9 +77,7 @@ export default {
     },
     async fetchSwipeStats() {
       try {
-        const response = await axios.get(
-          `http://localhost:5001/user-swipe-stats/${this.userId}`
-        );
+        const response = await axios.get(`http://localhost:5001/user-swipe-stats/${this.userId}`);
         this.swipeStats = response.data;
       } catch (err) {
         console.error("Error fetching swipe stats:", err);
@@ -110,15 +86,14 @@ export default {
     },
     async reactToGame(gameId, liked) {
       try {
-        console.log("Reacting to game:", { id_user: this.userId, id_game: gameId, liked }); // Log for debugging
+        console.log("Reacting to game:", { id_user: this.userId, id_game: gameId, liked });
         await axios.post("http://localhost:5001/react-game", {
           id_user: this.userId,
           id_game: gameId,
           liked,
         });
-        alert(liked ? "Game liked successfully." : "Game unliked successfully.");
         await this.fetchGames();
-        await this.fetchSwipeStats(); // Update swipe stats after reaction
+        await this.fetchSwipeStats();
       } catch (err) {
         console.error("Error reacting to game:", err);
         alert("Failed to react to the game.");
@@ -215,5 +190,46 @@ button {
 
 button:hover {
   opacity: 0.8;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 1s ease-out;
+}
+
+/* Move Category Animation with "Lift and Move" effect */
+.move-category-enter-active,
+.move-category-leave-active {
+  transition:
+    transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1),
+    opacity 0.6s ease,
+    box-shadow 0.3s ease;
+}
+
+.move-category-enter {
+  transform: translateY(-40px) scale(1.05);
+  opacity: 0;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+}
+
+.move-category-leave-to {
+  transform: translateY(40px) scale(0.95);
+  opacity: 0;
+  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.05);
+}
+
+.move-category-move {
+  transition: transform 0.6s ease;
 }
 </style>

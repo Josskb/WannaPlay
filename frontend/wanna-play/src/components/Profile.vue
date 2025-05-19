@@ -1,17 +1,27 @@
 <template>
   <div class="profile-page" v-if="user">
     <div class="profile-card">
-      <h2>👤 Welcome, {{ user.username }}!</h2>
+      <h2>👤 Welcome, {{ user.firstname }} {{ user.lastname }}!</h2>
+      <p><strong>Username:</strong> {{ user.username }}</p>
       <p><strong>Email:</strong> {{ user.email }}</p>
 
       <div class="section">
+        <label><strong>First Name:</strong></label>
+        <input type="text" v-model="firstname" />
+        <label><strong>Last Name:</strong></label>
+        <input type="text" v-model="lastname" />
+        <button @click="saveName">Save Name</button>
+      </div>
+
+      <div class="section">
         <label><strong>Birthdate:</strong></label>
-        <input
-          type="date"
-          v-model="birthdate"
-          :disabled="birthdateSaved"
-        />
-        <button v-if="!birthdateSaved" @click="saveBirthdate">Save Birthdate</button>
+        <div v-if="birthdateSaved">
+          <p>{{ formattedBirthdate }}</p>
+        </div>
+        <div v-else>
+          <input type="date" v-model="birthdate" />
+          <button @click="saveBirthdate">Save Birthdate</button>
+        </div>
       </div>
 
       <div class="section">
@@ -27,67 +37,94 @@
 </template>
 
 <script>
-import axios from 'axios'
+import axios from 'axios';
 
 export default {
   name: 'Profile',
   data() {
     return {
       user: null,
+      firstname: '',
+      lastname: '',
       birthdate: '',
       birthdateSaved: false,
       newPassword: '',
       confirmPassword: '',
       errorMessage: '' // Store error messages here
+    };
+  },
+  computed: {
+    formattedBirthdate() {
+      if (!this.birthdate) return '';
+      const date = new Date(this.birthdate);
+      return date.toLocaleDateString(); // Format as MM/DD/YYYY or DD/MM/YYYY based on locale
     }
   },
   async mounted() {
-    const username = this.$route.params.username
+    const username = this.$route.params.username;
     try {
-      const res = await axios.get(`http://localhost:5001/account/${username}`)
-      this.user = res.data.user
-      this.birthdate = this.user.birthdate || ''
-      this.birthdateSaved = !!this.user.birthdate
+      const res = await axios.get(`http://localhost:5001/account/${username}`);
+      this.user = res.data.user;
+      this.firstname = this.user.firstname || '';
+      this.lastname = this.user.lastname || '';
+      this.birthdate = this.user.birthdate || '';
+      this.birthdateSaved = !!this.user.birthdate;
     } catch (err) {
-      this.errorMessage = 'Unable to load user profile.'
+      console.error('Error loading user profile:', err);
+      this.errorMessage = err.response?.data?.message || 'Unable to load user profile.';
     }
   },
   methods: {
+    async saveName() {
+      this.errorMessage = ''; // Clear previous error messages
+      try {
+        await axios.post('http://localhost:5001/update-name', {
+          id_user: this.user.id_user,
+          firstname: this.firstname,
+          lastname: this.lastname
+        });
+        alert('Name updated successfully.');
+      } catch (err) {
+        this.errorMessage = 'Failed to update name.';
+      }
+    },
     async saveBirthdate() {
       this.errorMessage = ''; // Clear previous error messages
       try {
         await axios.post('http://localhost:5001/update-birthdate', {
           id_user: this.user.id_user,
           birthdate: this.birthdate
-        })
-        this.birthdateSaved = true
+        });
+        this.birthdateSaved = true;
+        alert('Birthdate saved successfully.');
       } catch (err) {
-        this.errorMessage = 'Failed to update birthdate.'
+        this.errorMessage = 'Failed to update birthdate.';
       }
     },
     async changePassword() {
       this.errorMessage = ''; // Clear previous error messages
       if (this.newPassword !== this.confirmPassword) {
-        this.errorMessage = 'Passwords do not match.'
-        return
+        this.errorMessage = 'Passwords do not match.';
+        return;
       }
       if (!this.newPassword) {
-        this.errorMessage = 'Password cannot be empty.'
-        return
+        this.errorMessage = 'Password cannot be empty.';
+        return;
       }
       try {
         await axios.post('http://localhost:5001/change-password', {
           id_user: this.user.id_user,
           newPassword: this.newPassword
-        })
-        this.newPassword = ''
-        this.confirmPassword = ''
+        });
+        this.newPassword = '';
+        this.confirmPassword = '';
+        alert('Password updated successfully.');
       } catch (err) {
-        this.errorMessage = 'Failed to update password.'
+        this.errorMessage = 'Failed to update password.';
       }
     }
   }
-}
+};
 </script>
 
 <style scoped>

@@ -98,8 +98,8 @@ app.get('/disliked-games/:id_user', async (req, res) => {
 
 // Register
 app.post('/register', async (req, res) => {
-  const { username, email, password } = req.body;
-  if (!username || !email || !password) {
+  const { username, email, password, firstname, lastname } = req.body;
+  if (!username || !email || !password || !firstname || !lastname) {
     return res.status(400).json({ message: 'Missing required fields.' });
   }
   try {
@@ -111,8 +111,8 @@ app.post('/register', async (req, res) => {
       return res.status(409).json({ message: 'Username or email already exists.' });
     }
     await db.promise().query(
-      'INSERT INTO users (username, email, password) VALUES (?, ?, ?)',
-      [username, email, password]
+      'INSERT INTO users (username, email, password, firstname, lastname) VALUES (?, ?, ?, ?, ?)',
+      [username, email, password, firstname, lastname]
     );
     res.status(201).json({ message: 'User registered successfully.' });
   } catch (error) {
@@ -301,14 +301,16 @@ app.post('/admin/delete-game', async (req, res) => {
 
 // Add a new user (admin only)
 app.post('/admin/add-user', async (req, res) => {
-  const { username, email, password } = req.body;
-  if (!username || !email || !password) {
+  const { firstname, lastname, username, email, password } = req.body;
+
+  if (!firstname || !lastname || !username || !email || !password) {
     return res.status(400).json({ message: 'Missing required fields.' });
   }
+
   try {
     await db.promise().query(
-      'INSERT INTO Users (username, email, password) VALUES (?, ?, ?)',
-      [username, email, password]
+      'INSERT INTO Users (firstname, lastname, username, email, password) VALUES (?, ?, ?, ?, ?)',
+      [firstname, lastname, username, email, password]
     );
     res.status(201).json({ message: 'User added successfully.' });
   } catch (error) {
@@ -716,6 +718,67 @@ app.post('/admin/add-game-to-family', async (req, res) => {
   } catch (error) {
     console.error('Error adding game to family:', error);
     res.status(500).json({ message: 'Failed to add game to family.' });
+  }
+});
+
+// Get user details by username
+app.get('/account/:username', async (req, res) => {
+  const { username } = req.params;
+
+  try {
+    const [rows] = await db.promise().query(
+      'SELECT id_user, username, email, birthdate FROM Users WHERE username = ?',
+      [username]
+    );
+
+    if (rows.length === 0) {
+      return res.status(404).json({ message: 'User not found.' });
+    }
+
+    res.status(200).json({ user: rows[0] });
+  } catch (error) {
+    console.error('Error fetching user details:', error);
+    res.status(500).json({ message: 'Failed to fetch user details.' });
+  }
+});
+
+// Update user birthdate
+app.post('/update-birthdate', async (req, res) => {
+  const { id_user, birthdate } = req.body;
+
+  if (!id_user || !birthdate) {
+    return res.status(400).json({ message: 'User ID and birthdate are required.' });
+  }
+
+  try {
+    await db.promise().query(
+      'UPDATE Users SET birthdate = ? WHERE id_user = ?',
+      [birthdate, id_user]
+    );
+    res.status(200).json({ message: 'Birthdate updated successfully.' });
+  } catch (error) {
+    console.error('Error updating birthdate:', error);
+    res.status(500).json({ message: 'Failed to update birthdate.' });
+  }
+});
+
+// Change user password
+app.post('/change-password', async (req, res) => {
+  const { id_user, newPassword } = req.body;
+
+  if (!id_user || !newPassword) {
+    return res.status(400).json({ message: 'User ID and new password are required.' });
+  }
+
+  try {
+    await db.promise().query(
+      'UPDATE Users SET password = ? WHERE id_user = ?',
+      [newPassword, id_user]
+    );
+    res.status(200).json({ message: 'Password updated successfully.' });
+  } catch (error) {
+    console.error('Error updating password:', error);
+    res.status(500).json({ message: 'Failed to update password.' });
   }
 });
 

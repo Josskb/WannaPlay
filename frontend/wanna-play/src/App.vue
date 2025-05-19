@@ -2,8 +2,10 @@
   <div id="app">
     <header class="app-header">
       <div class="logo-wrapper">
-        <img src="/logo_transparent.png" alt="Logo" class="logo" />
-        <h1>Wanna Play?</h1>
+        <router-link to="/" class="logo-link">
+          <img src="/logo_transparent.png" alt="Logo" class="logo" />
+          <h1>Wanna Play?</h1>
+        </router-link>
       </div>
       <nav>
         <router-link to="/">Home</router-link>
@@ -103,6 +105,17 @@ function logout() {
   display: flex;
   align-items: center;
   gap: 10px;
+}
+
+.logo-link {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  color: inherit;
+}
+
+.logo-link:hover h1 {
+  color: #d49d00;
 }
 
 .logo {
