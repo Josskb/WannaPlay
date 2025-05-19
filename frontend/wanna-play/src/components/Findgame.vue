@@ -17,8 +17,10 @@
         </div>
         <div class="desc-text">
           <h3 class="game-name">{{ currentGame.name }}</h3>
-          <p class="description" v-html="cleanedDescription"></p>
-          <p class="more">Other information...</p>
+          <p class="description" v-html="truncatedDescription"></p>
+          <p class="more" @click="toggleDescription">
+            {{ showFullDescription ? 'Show less' : 'Other information...' }}
+          </p>
         </div>
       </div>
     </div>
@@ -49,6 +51,7 @@ export default {
       currentX: 0,
       cardTransform: 'translateX(0px) rotate(0deg)',
       cardOpacity: 1,
+      showFullDescription: false,
     };
   },
   computed: {
@@ -63,8 +66,21 @@ export default {
         .replace(/&mdash;/g, '—')
         .replace(/&ndash;/g, '–');
     },
+    truncatedDescription() {
+      if (this.showFullDescription) {
+        return this.cleanedDescription;
+      }
+      const maxLength = 150;
+      const plainText = this.cleanedDescription.replace(/<[^>]*>/g, ''); // Remove HTML tags
+      return plainText.length > maxLength
+        ? plainText.substring(0, maxLength) + '...'
+        : plainText;
+    },
   },
   methods: {
+    toggleDescription() {
+      this.showFullDescription = !this.showFullDescription;
+    },
     async fetchNextGame() {
       try {
         console.log('Fetching next game for user:', this.userId);
@@ -237,9 +253,11 @@ export default {
 }
 
 .more {
-  color: #999;
+  color: #f4c959;
   font-size: 0.85rem;
   margin-top: 10px;
+  cursor: pointer;
+  text-decoration: underline;
 }
 
 .action-buttons {
