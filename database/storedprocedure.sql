@@ -34,7 +34,7 @@ CREATE PROCEDURE sp_UserRemovesReaction(
 )
 BEGIN
     DELETE FROM enjoy
-    WHERE id_user = id_user AND id_game = id_game;
+    WHERE id_user = sp_UserRemovesReaction.id_user AND id_game = sp_UserRemovesReaction.id_game;
 END;
 //
 
@@ -47,7 +47,7 @@ BEGIN
     SELECT G.idgame, G.name, G.description, G.thumbnail
     FROM enjoy E
     JOIN Games G ON E.id_game = G.idgame
-    WHERE E.id_user = id_user AND E.liked = TRUE;
+    WHERE E.id_user = sp_GetLikedGames.id_user AND E.liked = TRUE;
 END;
 //
 
@@ -60,15 +60,11 @@ BEGIN
     SELECT G.idgame, G.name, G.description, G.thumbnail
     FROM enjoy E
     JOIN Games G ON E.id_game = G.idgame
-    WHERE E.id_user = id_user AND E.liked = FALSE;
+    WHERE E.id_user = sp_GetDislikedGames.id_user AND E.liked = FALSE;
 END;
 //
 
-DELIMITER //
-
-
 -- Procedure 5: Add a new category and assign games to it
-DELIMITER //
 
 DROP PROCEDURE IF EXISTS sp_CreateCategoryAndAssignGames;
 
@@ -85,10 +81,11 @@ BEGIN
     -- Étape 1 : Vérifier si la catégorie existe déjà
     SELECT id_category INTO new_category_id
     FROM Category
-    WHERE name = category_name;
+    WHERE name = category_name
+    LIMIT 1;
 
     -- Étape 2 : Si elle n'existe pas, l'insérer
-    IF new_category_id IS NULL THEN
+    IF new_category_id IS NULL OR new_category_id = 0 THEN
         INSERT INTO Category (name)
         VALUES (category_name);
 
