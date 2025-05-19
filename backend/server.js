@@ -782,6 +782,24 @@ app.post('/change-password', async (req, res) => {
   }
 });
 
+// Get the most liked game
+app.get('/most-liked-game', async (req, res) => {
+  try {
+    const [rows] = await db.promise().query(
+      'SELECT idgame, name, description, thumbnail FROM Games WHERE idgame = fn_MostLikedGame()'
+    );
+
+    if (rows.length === 0) {
+      return res.status(404).json({ message: 'No most liked game found.' });
+    }
+
+    res.status(200).json({ game: rows[0] });
+  } catch (error) {
+    console.error('Error fetching the most liked game:', error);
+    res.status(500).json({ message: 'Failed to fetch the most liked game.' });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}`);
 });

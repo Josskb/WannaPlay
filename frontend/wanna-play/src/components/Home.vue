@@ -33,13 +33,35 @@
         </div>
       </section>
   
+      <!-- Most Liked Game Block -->
+      <section v-if="mostLikedGame" class="card most-liked-card animate-slide-in">
+        <h2 class="card-title">Most Liked Game</h2>
+        <img :src="mostLikedGame.thumbnail" alt="Most Liked Game" class="game-image" />
+        <h3 class="game-name">{{ mostLikedGame.name }}</h3>
+      </section>
+  
     </div>
   </template>
   
   <script>
+  import axios from 'axios';
+  
   export default {
     name: 'Home',
+    data() {
+      return {
+        mostLikedGame: null,
+      };
+    },
     methods: {
+      async fetchMostLikedGame() {
+        try {
+          const response = await axios.get('http://localhost:5001/most-liked-game');
+          this.mostLikedGame = response.data.game;
+        } catch (error) {
+          console.error('Error fetching the most liked game:', error);
+        }
+      },
       handleButtonClick() {
         const user = localStorage.getItem('user');
         if (user) {
@@ -47,8 +69,11 @@
         } else {
           this.$router.push('/login'); // Redirect to login if not logged in
         }
-      }
-    }
+      },
+    },
+    mounted() {
+      this.fetchMostLikedGame();
+    },
   }
   </script>
   
@@ -122,7 +147,7 @@
 /* Ajustement responsive */
 @media (max-width: 500px) {
   .icon-floating {
-    width: 40px; /* plus petit sur téléphone */
+    width: 40px; 
     top: 10px;
     right: 15px;
   }
@@ -192,7 +217,32 @@
     text-decoration: underline;
   }
   
-  /* Animations */
+  /* Most Liked Card */
+.most-liked-card {
+  text-align: center;
+  background: white;
+  border-radius: 20px;
+  padding: 20px;
+  box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.1);
+  margin-top: 40px;
+}
+
+.most-liked-card .game-image {
+  width: 100%;
+  max-height: 200px;
+  object-fit: cover;
+  border-radius: 10px;
+  margin-bottom: 15px;
+}
+
+.most-liked-card .game-name {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #5e3c2b;
+  margin-bottom: 10px;
+}
+
+/* Animations */
 @keyframes fadeIn {
   from {
     opacity: 0;
