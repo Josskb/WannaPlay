@@ -72,6 +72,23 @@ app.post('/react-game', async (req, res) => {
   }
 });
 
+// Remove a like or dislike from a game
+app.post('/remove-reaction', async (req, res) => {
+  const { id_user, id_game } = req.body;
+
+  if (!id_user || !id_game) {
+    return res.status(400).json({ message: 'User ID and Game ID are required.' });
+  }
+
+  try {
+    await db.promise().query('CALL sp_UserRemovesReaction(?, ?)', [id_user, id_game]);
+    res.status(200).json({ message: 'Reaction removed successfully.' });
+  } catch (error) {
+    console.error('Error removing reaction:', error);
+    res.status(500).json({ message: 'Failed to remove reaction.' });
+  }
+});
+
 // Get liked games for a user
 app.get('/liked-games/:id_user', async (req, res) => {
   const { id_user } = req.params;

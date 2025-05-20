@@ -29,12 +29,12 @@ END;
 -- Procedure 2: User removes a like or dislike
 DROP PROCEDURE IF EXISTS sp_UserRemovesReaction;
 CREATE PROCEDURE sp_UserRemovesReaction(
-    IN id_user INT,
-    IN id_game BIGINT
+    IN input_id_user INT,
+    IN input_id_game BIGINT
 )
 BEGIN
     DELETE FROM enjoy
-    WHERE id_user = sp_UserRemovesReaction.id_user AND id_game = sp_UserRemovesReaction.id_game;
+    WHERE enjoy.id_user = input_id_user AND enjoy.id_game = input_id_game;
 END;
 //
 

@@ -16,6 +16,9 @@
               <button @click="reactToGame(game.idgame, false)" class="thumbs-down">
                 👎 Unlike
               </button>
+              <button @click="removeReaction(game.idgame)" class="remove-reaction">
+                ❌ Remove
+              </button>
             </div>
           </div>
         </transition-group>
@@ -33,6 +36,9 @@
             <div class="game-actions">
               <button @click="reactToGame(game.idgame, true)" class="thumbs-up">
                 👍 Like
+              </button>
+              <button @click="removeReaction(game.idgame)" class="remove-reaction">
+                ❌ Remove
               </button>
             </div>
           </div>
@@ -105,6 +111,20 @@ export default {
       } catch (err) {
         console.error("Error reacting to game:", err);
         alert("Failed to react to the game.");
+      }
+    },
+    async removeReaction(gameId) {
+      try {
+        console.log("Removing reaction for game:", { id_user: this.userId, id_game: gameId });
+        await axios.post("http://localhost:5001/remove-reaction", {
+          id_user: this.userId,
+          id_game: gameId,
+        });
+        await this.fetchGames(); // Refresh the liked and disliked games
+        await this.fetchSwipeStats(); // Refresh the swipe stats
+      } catch (err) {
+        console.error("Error removing reaction:", err);
+        alert("Failed to remove the reaction.");
       }
     },
   },
@@ -193,6 +213,11 @@ button {
 
 .thumbs-down {
   background-color: #e44a4a;
+  color: white;
+}
+
+.remove-reaction {
+  background-color: #ff9800;
   color: white;
 }
 

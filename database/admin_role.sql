@@ -2,7 +2,7 @@
 SELECT User, Host FROM mysql.user WHERE User = 'admin';
 
 -- Supprimez l'utilisateur existant (si nécessaire)
-DROP USER 'admin'@'localhost';
+DROP USER IF EXISTS 'admin'@'localhost';
 
 -- Create an admin user with specific privileges
 CREATE USER 'admin'@'localhost' IDENTIFIED BY 'admin_password';
